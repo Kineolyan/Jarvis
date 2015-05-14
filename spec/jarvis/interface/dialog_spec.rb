@@ -37,7 +37,7 @@ RSpec.describe Jarvis::Interface::Dialog do
 		end
 
 		it 'outputs the question' do
-			expect(io.out.content).to eq "[Jarvis]>> What to do?\n"
+			expect(io.out.content).to eq "[Jarvis]>> What to do? "
 		end
 
 		it 'gets the user input' do

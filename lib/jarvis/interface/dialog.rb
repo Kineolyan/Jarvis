@@ -2,7 +2,6 @@ module Jarvis
 	module Interface
 
 		class Dialog
-
 			def initialize io
 				@io = io
 			end
@@ -16,10 +15,9 @@ module Jarvis
 			end
 
 			def ask question
-				say question
+				@io.out.print("[Jarvis]>> #{question} ")
 				@io.gets
 			end
-
 		end
 
 	end

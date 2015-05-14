@@ -9,6 +9,12 @@ module Jarvis
 
 				def << message
 					@output.puts message
+					self
+				end
+
+				def print message
+					@output.print message
+					self
 				end
 			end
 
@@ -34,6 +40,11 @@ module Jarvis
 
 				def << value
 					@content << value << "\n"
+				end
+
+				def print value
+					@content << value
+					self
 				end
 			end
 
