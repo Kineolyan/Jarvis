@@ -29,7 +29,7 @@ module Jarvis
 			end
 
 			def gets
-				STDOUT.gets.chomp
+				STDIN.gets.chomp
 			end
 		end
 

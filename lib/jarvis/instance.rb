@@ -1,5 +1,7 @@
 require "jarvis/interface/ios"
 require "jarvis/interface/dialog"
+require "jarvis/parser/interpreter"
+require "jarvis/parser/rule"
 
 module Jarvis
 
@@ -9,11 +11,22 @@ module Jarvis
 
   	def initialize
   		@dialog = Jarvis::Interface::Dialog.new Jarvis::Interface::StdIO.new
+      @interpreter = Jarvis::Parser::Interpreter.new
+
+      @interpreter.rules << Jarvis::Parser::Rule.new(/^run (?<quote>['"]?)(?<program>.+)\k<quote>/) do |matches|
+        @dialog.say "Running '#{matches[:program]}'"
+      end
+      @interpreter.rules << Jarvis::Parser::Rule.new(/^quit|exit/) do |matches|
+        exit(0)
+      end
   	end
 
     # Start the instance
     def start
       @dialog.say "Hello Sir"
+      while true
+        @interpreter.interpret @dialog.ask "What to do?\n"
+      end
     end
 
   end
