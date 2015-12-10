@@ -13,12 +13,10 @@ module Jarvis
   		@dialog = Jarvis::Interface::Dialog.new Jarvis::Interface::StdIO.new
       @interpreter = Jarvis::Parser::Interpreter.new
 
-      @interpreter.rules << Jarvis::Parser::Rule.new(/^run (?<quote>['"]?)(?<program>.+)\k<quote>/) do |matches|
+      @interpreter.rules << Jarvis::Parser::Rule.new(/^run (?<quote>['"]?)(?<program>.+)\k<quote>/, ->(matches) do
         @dialog.say "Running '#{matches[:program]}'"
-      end
-      @interpreter.rules << Jarvis::Parser::Rule.new(/^quit|exit/) do |matches|
-        exit(0)
-      end
+      end)
+      @interpreter.rules << Jarvis::Parser::Rule.new(/^quit|exit/, ->(matches) { exit(0) })
   	end
 
     # Start the instance

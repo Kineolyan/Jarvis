@@ -1,9 +1,9 @@
 module Jarvis::Parser
 
   class Rule
-    def initialize expr, &block
+    def initialize expr, action
       @expr = expr
-      @action = block
+      @action = action
     end
 
     def match message
