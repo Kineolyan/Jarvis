@@ -8,11 +8,12 @@ module Jarvis::Parser
     end
 
     def interpret message
-      @rules.each do |rule|
+      result = @rules.each do |rule|
         if rule.match message
-          return if rule.execute message
+          return true if rule.execute message
         end
       end
+      result == false
     end
   end
 
