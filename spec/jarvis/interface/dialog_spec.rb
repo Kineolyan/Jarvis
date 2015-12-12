@@ -10,7 +10,7 @@ RSpec.describe Jarvis::Interface::Dialog do
 		before { dialog.say "Hello Sir" }
 
 		it "outputs the message prefix by Jarvis" do
-			expect(io.out.content).to eq "[Jarvis]>> Hello Sir\n"
+			expect(io.out.content.last).to eq "[Jarvis]>> Hello Sir\n"
 		end
 
 		it "prints nothing on error" do
@@ -22,7 +22,7 @@ RSpec.describe Jarvis::Interface::Dialog do
 		before { dialog.report "Ough" }
 
 		it "outputs the error prefix by Jarvis" do
-			expect(io.err.content).to eq "[Jarvis]!! Ough\n"
+			expect(io.err.content.last).to eq "[Jarvis]!! Ough\n"
 		end
 
 		it "prints nothing on output" do
@@ -37,7 +37,7 @@ RSpec.describe Jarvis::Interface::Dialog do
 		end
 
 		it 'outputs the question' do
-			expect(io.out.content).to eq "[Jarvis]>> What to do? "
+			expect(io.out.content.last).to eq "[Jarvis]>> What to do? "
 		end
 
 		it 'gets the user input' do

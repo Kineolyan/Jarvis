@@ -32,7 +32,7 @@ module Jarvis
 			# Returns;
 			# - The user response
 			def ask question
-				@io.out.print("[Jarvis]>> #{question} ")
+				@io.out.print("[Jarvis]>> #{question.nil? || question.empty? ? '' : "#{question} "}")
 				@io.gets
 			end
 		end

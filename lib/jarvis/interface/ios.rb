@@ -41,15 +41,18 @@ module Jarvis
 				attr_reader :content
 
 				def initialize
-					@content = ""
+					@content = []
 				end
 
 				def << value
-					@content << value << "\n"
+					@content << "#{value}\n"
 				end
 
 				def print value
-					@content << value
+					if @content.last == nil || @content.last.end_with?("\n")
+						@content << ''
+					end
+					@content.last << value
 					self
 				end
 			end
