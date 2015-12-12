@@ -1,7 +1,10 @@
 module Jarvis
 	module Interface
 
+		# Representation of a StdIO
+		# This contains methods to output content in the IO and reads inputs
 		class StdIO
+			# Class instanciating an Out stream
 			class Out
 				def initialize output
 					@output = output
@@ -26,24 +29,30 @@ module Jarvis
 			end
 
 			def gets
-				STDOUT.gets.chomp
+				STDIN.gets.chomp
 			end
 		end
 
+		# IO working with strings.
+		# This is mainly interesting for tests.
 		class StringIO
+			# Class instanciating an Out stream
 			class Out
 				attr_reader :content
 
 				def initialize
-					@content = ""
+					@content = []
 				end
 
 				def << value
-					@content << value << "\n"
+					@content << "#{value}\n"
 				end
 
 				def print value
-					@content << value
+					if @content.last == nil || @content.last.end_with?("\n")
+						@content << ''
+					end
+					@content.last << value
 					self
 				end
 			end
