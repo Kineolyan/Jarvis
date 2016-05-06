@@ -1,9 +1,0 @@
-#!/usr/bin/env ruby
-
-require_relative "../lib/jarvis"
-
-out = Jarvis::Interface::StdIO.new
-jarvis = Jarvis::Instance.new out
-jarvis.start
-
-exit 0
