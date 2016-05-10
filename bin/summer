@@ -9,8 +9,8 @@ process.env.NODE_PATH = [
 // Resets the module paths
 require('module').Module._initPaths();
 
-const StdIO = require('jarvis/interface/ios').StdIO;
-const Instance = require('jarvis/instance').default;
+const StdIO = require('jarvis/interface/IOs').StdIO;
+const Instance = require('jarvis/Instance').default;
 
 const io = new StdIO();
 const jarvis = new Instance(io, 'Summer');
