@@ -10,4 +10,4 @@ process.env.NODE_PATH = [
 require('module').Module._initPaths();
 
 const app = require('jarvis').default;
-app('Summer');
+app('Jarvis');
