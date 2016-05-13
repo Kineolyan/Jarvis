@@ -1,0 +1,9 @@
+{
+  "hello-world": {
+    "cmd": "echo 'Hello World'"
+  },
+  "list": {
+    "cmd": "ls -l",
+    "cwd": "/mnt/Grishka/Projets"
+  }
+}

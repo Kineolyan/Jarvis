@@ -9,6 +9,10 @@
 /test/version_tmp/
 /tmp/
 
+## Project files
+lib/tasks/execs.json
+bin/test
+
 ## Specific to RubyMotion:
 .dat*
 .repl_history
