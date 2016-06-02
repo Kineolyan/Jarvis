@@ -1,4 +1,9 @@
+import Rule from 'jarvis/parser/Rule';
+import JobManager from 'jarvis/jobs/JobManager';
+
 export class Interpreter {
+  private _rules: Array<Rule>;
+  private _jobManager: JobManager;
   constructor(jobManager) {
     this._rules = [];
     this._jobManager = jobManager;

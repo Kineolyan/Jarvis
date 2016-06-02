@@ -9,6 +9,11 @@ import ExecJob from 'jarvis/jobs/ExecJob';
  * The main class of the project starting everything
  */
 class Instance extends EventEmitter {
+  private _running: boolean;
+  private _dialog: Dialog;
+  private _jobMgr: JobManager;
+  private _interpreter: Interpreter;
+
   constructor(io, name) {
     super();
 

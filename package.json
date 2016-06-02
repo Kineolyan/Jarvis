@@ -29,8 +29,10 @@
     "chai": "^3.5.0",
     "gulp": "^3.9.1",
     "gulp-mocha": "^2.2.0",
+    "gulp-typescript": "^2.13.4",
     "lodash": "^4.11.2",
-    "mocha": "^2.4.5"
+    "mocha": "^2.4.5",
+    "typescript": "^1.8.10"
   },
   "babel": {
     "presets": [

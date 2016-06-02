@@ -1,13 +1,16 @@
 import * as CP from 'child_process';
 import store from 'jarvis/storage/Store';
 
+interface ExecDefinition {
+  cmd: string;
+  cwd?: string;
+}
+
 export class ExecJob {
-  constructor(def) {
-    this._def = def;
-  }
+  constructor(private _def: ExecDefinition) {}
 
   execute() {
-    const options = {};
+    const options: any = {};
     if (this._def.cwd !== undefined) {
       options.cwd = this._def.cwd;
     }
@@ -29,19 +32,19 @@ export class ExecJob {
       }
     });
   }
-}
 
-ExecJob.tasks = function(key) {
-  const values = store.load('execs');
-  return key !== undefined ? values[key] : values;
-};
+  static tasks(key: string): ExecDefinition {
+    const values = store.load('execs');
+    return key !== undefined ? values[key] : values;
+  }
 
-ExecJob.create = function(name) {
-  const def = ExecJob.tasks(name);
-  if (def !== undefined) {
-    return new ExecJob(def);
-  } else {
-    return undefined;
+  static create(name: string): ExecJob {
+    const def = ExecJob.tasks(name);
+    if (def !== undefined) {
+      return new ExecJob(def);
+    } else {
+      return undefined;
+    }
   }
 }
 

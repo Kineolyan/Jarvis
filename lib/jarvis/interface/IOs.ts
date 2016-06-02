@@ -4,6 +4,7 @@ import { Readable, Writable } from 'stream';
 import ExecJob from 'jarvis/jobs/ExecJob';
 
 export class StringReabable extends Readable {
+	public inputs: Array<string>;
 	constructor(opts) {
 		super(opts);
 		this.inputs = [];
@@ -16,6 +17,7 @@ export class StringReabable extends Readable {
 }
 
 class StringWritable extends Writable {
+	public content: Array<string>;
 	constructor(opts) {
 		super(opts);
 		this.content = [];
@@ -36,11 +38,18 @@ class StringWritable extends Writable {
 	}
 }
 
-class AIO {
-	constructor(in_, out, err) {
-		this._in = in_;
-		this._out = out;
-		this._err = err;
+export interface IO {
+	prompt(message: string, lineFeed: boolean): void;
+	question(message: string): Promise<any>;
+	report(message: string): void;
+}
+
+class AIO implements IO {
+	private _intf: any;
+	constructor(
+		protected _in: Readable,
+		protected _out: Writable,
+		protected _err: Writable) {
 		this._intf = rl.createInterface({
 			input: this._in, output: this._out,
 			completer: this.complete.bind(this)
@@ -67,7 +76,7 @@ class AIO {
 		});
 	}
 
-	report(message) {
+	report(message: string) {
 		this._err.write(`${message}\n`);
 	}
 
@@ -77,7 +86,7 @@ class AIO {
 	 * @param {String} line content to complete
 	 * @returns {String[]} completions
 	 */
-	complete(line) {
+	complete(line: string) {
 		const completions = AIO.completions();
 		const hits = completions.filter(c => c.startsWith(line));
 		// show all completions if none found
@@ -138,11 +147,15 @@ export class StringIO extends AIO {
 	}
 
 	input(...values) {
-		this._in.inputs.push(...values);
+		(this._in as StringReadable).inputs.push(...values);
 	}
 }
 
-export class MockIO {
+export class MockIO implements IO {
+	public inputs: Array<string>;
+	public out: Array<string>;
+	public err: Array<string>;
+
 	constructor() {
 		this.inputs = [];
 		this.out = [];

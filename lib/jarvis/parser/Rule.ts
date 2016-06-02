@@ -1,14 +1,15 @@
-export class Rule {
-  constructor(expr, action) {
-    this._expr = expr;
-    this._action = action;
-  }
+interface RuleAction {
+  (value: any): any
+}
 
-  match(message) {
+export class Rule {
+  constructor(private _expr: RegExp, private _action: RuleAction) {}
+
+  match(message: string) {
     return this._expr.test(message);
   }
 
-  execute(message) {
+  execute(message: string) {
     const matches = this._expr.exec(message);
     const result = this._action(matches);
     return result === undefined ? true : result;

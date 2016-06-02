@@ -1,15 +1,19 @@
+import Dialog from 'jarvis/interface/Dialog';
+
 export class JobManager {
-  constructor(dialog) {
+  private _jobId: number;
+  private _jobs: Map<number, Promise>;
+
+  constructor(private _dialog: Dialog) {
     this._jobId = 0;
     this._jobs = new Map();
-    this._dialog = dialog;
   }
 
   get jobs() {
     return Array.from(this._jobs.values());
   }
 
-  registerJob(job) {
+  registerJob(job: Promise) {
     const jobId = ++this._jobId;
     this._jobs.set(jobId, job);
     return job.then((...args) => {

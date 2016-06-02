@@ -1,9 +1,12 @@
 export class Store {
+  private _directory: string;
+  private _tasks: Array<any>;
+
   constructor() {
     this._directory = 'tasks';
   }
 
-  load(resource) {
+  load(resource: string) {
     if (resource === 'execs') {
       if (this._tasks === undefined) {
         this._tasks = require(`${this._directory}/execs.json`);

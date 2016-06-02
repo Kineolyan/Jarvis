@@ -13,6 +13,7 @@ setUpModules._init = false;
 
 const gulp = require('gulp');
 const mocha = require('gulp-mocha');
+const ts = require('gulp-typescript');
 const path = require('path');
 
 function pathItem(name) {
@@ -31,9 +32,19 @@ function pathItem(name) {
 var PATHS = pathItem('.');
 PATHS.bin = pathItem('bin');
 PATHS.lib = pathItem('lib');
+PATHS.dist = pathItem('dist');
 
 gulp.task('build', function() {
-  console.log('Nothing to build');
+  return gulp.src([PATHS.lib('**/*.ts'), `!${PATHS.lib('**/*.spec.ts')}`])
+		.pipe(ts({
+      target: 'ES6',
+			// declaration: false,
+      // removeComments: true,
+      moduleResolution: 'node',
+			// noExternalResolve: true,
+      rootDir: PATHS.lib()
+		})).js
+    .pipe(gulp.dest(PATHS.dist()));
 });
 
 gulp.task('test', function() {
