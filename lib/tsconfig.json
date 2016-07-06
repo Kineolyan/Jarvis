@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "declaration": true,
+        "removeComments": true,
+        "moduleResolution": "classic"
+    },
+    "filesGlob": [
+        "lib/**/*.ts",
+        "!lib/**/*.spec.ts",
+        "!node_modules/**"
+    ],
+    "files": [],
+    "atom": {
+        "rewriteTsconfig": true,
+        "compileOnSave": false
+    }
+}
