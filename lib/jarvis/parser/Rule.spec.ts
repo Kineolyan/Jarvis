@@ -1,4 +1,4 @@
-import Rule from 'jarvis/parser/Rule';
+import Rule from './Rule';
 import _ from 'lodash';
 
 describe('Jarvis::Parse::Rule', function () {

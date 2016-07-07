@@ -1,4 +1,4 @@
-import Dialog from 'jarvis/interface/Dialog';
+import Dialog from '../interface/Dialog';
 
 export class JobManager {
   private _jobId: number;

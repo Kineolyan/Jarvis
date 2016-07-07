@@ -1,5 +1,5 @@
 import * as CP from 'child_process';
-import store from 'jarvis/storage/Store';
+import store from '../storage/Store';
 
 interface ExecDefinition {
   cmd: string;

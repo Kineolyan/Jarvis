@@ -1,18 +1,19 @@
 {
     "compilerOptions": {
         "target": "es6",
-        "declaration": true,
-        "removeComments": true,
+        "declaration": false,
+        "removeComments": false,
         "moduleResolution": "classic"
     },
     "filesGlob": [
-        "lib/**/*.ts",
-        "!lib/**/*.spec.ts",
-        "!node_modules/**"
+        "./**/*.ts",
+        "../typings/**/*.d.ts"
     ],
     "files": [],
+    "compileOnSave": false,
+    "buildOnSave": false,
     "atom": {
-        "rewriteTsconfig": true,
+        "rewriteTsconfig": false,
         "compileOnSave": false
     }
 }

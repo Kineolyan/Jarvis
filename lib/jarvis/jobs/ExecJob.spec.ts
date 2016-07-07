@@ -1,5 +1,5 @@
-import ExecJob from 'jarvis/jobs/ExecJob';
-import store from 'jarvis/storage/Store';
+import ExecJob from './ExecJob';
+import store from '../storage/Store';
 
 import _ from 'lodash';
 

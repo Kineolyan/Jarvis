@@ -1,13 +1,16 @@
-import Instance from 'jarvis/Instance';
-import { MockIO } from 'jarvis/interface/IOs';
-import Rule from 'jarvis/parser/Rule';
+///<reference path="../../typings/index.d.ts"/>
 
 import _ from 'lodash';
+import {expect} from 'chai';
+
+import Instance from './Instance';
+import { MockIO } from './interface/IOs';
+import Rule from './parser/Rule';
 
 describe('Jarvis::Instance', function () {
   beforeEach(function () {
     this.io = new MockIO();
-    this.jarvis = new Instance(this.io);
+    this.jarvis = new Instance(this.io, 'test');
   });
 
   describe('#constructor', function () {

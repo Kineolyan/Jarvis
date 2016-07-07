@@ -1,8 +1,8 @@
-import Rule from 'jarvis/parser/Rule';
-import Interpreter from 'jarvis/parser/Interpreter';
-import Dialog from 'jarvis/interface/Dialog';
-import JobManager from 'jarvis/jobs/JobManager';
-import { MockIO } from 'jarvis/interface/IOs';
+import Rule from './Rule';
+import Interpreter from './Interpreter';
+import Dialog from '../interface/Dialog';
+import JobManager from '../jobs/JobManager';
+import { MockIO } from '../interface/IOs';
 
 import _ from 'lodash';
 

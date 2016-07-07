@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import rl from 'readline';
 import { Readable, Writable } from 'stream';
-import ExecJob from 'jarvis/jobs/ExecJob';
+import ExecJob from '../jobs/ExecJob';
 
 export class StringReabable extends Readable {
 	public inputs: Array<string>;
@@ -39,7 +39,7 @@ class StringWritable extends Writable {
 }
 
 export interface IO {
-	prompt(message: string, lineFeed: boolean): void;
+	prompt(message: string, lineFeed?: boolean): void;
 	question(message: string): Promise<any>;
 	report(message: string): void;
 }
@@ -111,7 +111,7 @@ AIO.completions = (function() {
  * Representation of a StdIO
  * This contains methods to output content in the IO and reads inputs
  */
-export class StdIO extends AIO {
+class StdIO extends AIO {
 	constructor() {
 		super(process.stdin, process.stdout, process.stdout);
 	}

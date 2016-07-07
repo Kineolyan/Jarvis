@@ -1,4 +1,4 @@
-import { Store } from 'jarvis/storage/Store';
+import { Store } from './Store';
 
 describe('Jarvis::Storage::Store', function () {
   beforeEach(function () {

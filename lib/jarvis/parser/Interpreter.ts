@@ -1,5 +1,5 @@
-import Rule from 'jarvis/parser/Rule';
-import JobManager from 'jarvis/jobs/JobManager';
+import Rule from './Rule';
+import JobManager from '../jobs/JobManager';
 
 export class Interpreter {
   private _rules: Array<Rule>;

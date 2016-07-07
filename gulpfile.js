@@ -70,11 +70,10 @@ gulp.task('test', function() {
 	const chai = require('chai');
 	require('babel-register');
 
-	chai.config.includeStact = true;
-	global.expect = chai.expect;
+  chai.config.includeStack = true;
 
-	return gulp.src([PATHS.lib('**/*.spec.js')], { read: false })
-		.pipe(mocha({ ui: 'bdd', reporter: 'spec' }));
+  return gulp.src([PATHS.dist('**/*.spec.js')], { read: false })
+    .pipe(mocha({ ui: 'bdd', reporter: 'spec' }));
 });
 
 gulp.task('lint', function() {

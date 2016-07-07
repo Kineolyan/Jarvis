@@ -1,5 +1,5 @@
-import Dialog from 'jarvis/interface/Dialog';
-import { MockIO } from 'jarvis/interface/IOs';
+import Dialog from './Dialog';
+import { MockIO } from './IOs';
 
 import _ from 'lodash';
 
