@@ -1,7 +1,8 @@
+const _ = require('lodash');
+import {expect} from 'chai';
+
 import Dialog from './Dialog';
 import { MockIO } from './IOs';
-
-import _ from 'lodash';
 
 describe('Jarvis.Interface.Dialog', function() {
 	beforeEach(function() {

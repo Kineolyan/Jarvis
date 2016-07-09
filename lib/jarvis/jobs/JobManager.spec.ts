@@ -1,3 +1,5 @@
+import {expect} from 'chai';
+
 import JobManager from './JobManager';
 import { MockIO } from '../interface/IOs';
 import Dialog from '../interface/Dialog';

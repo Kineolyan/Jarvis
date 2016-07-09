@@ -1,5 +1,5 @@
-import _ from 'lodash';
-import rl from 'readline';
+const _ = require('lodash');
+const rl = require('readline');
 import { Readable, Writable } from 'stream';
 import ExecJob from '../jobs/ExecJob';
 
@@ -16,7 +16,7 @@ export class StringReabable extends Readable {
 	}
 }
 
-class StringWritable extends Writable {
+export class StringWritable extends Writable {
 	public content: Array<string>;
 	constructor(opts) {
 		super(opts);
@@ -44,9 +44,9 @@ export interface IO {
 	report(message: string): void;
 }
 
-const IoCompletions = (function() {
-	let values;
-	return function() {
+const IoCompletions = (function(): () => string[] {
+	let values: string[];
+	return function(): string[] {
 		if (values === undefined) {
 			values = _.flatten([
 				['quit', 'exit'],
@@ -57,7 +57,7 @@ const IoCompletions = (function() {
 	};
 })();
 
-class AIO implements IO {
+export class AIO implements IO {
 	private _intf: any;
 	constructor(
 		protected _in: Readable,
@@ -70,8 +70,8 @@ class AIO implements IO {
 		this._intf.setPrompt('>');
 	}
 
-	static completions() {
-		return IoCompletions;
+	static completions(): string[] {
+		return IoCompletions();
 	}
 
 	prompt(message, lineFeed = true) {
@@ -115,7 +115,7 @@ class AIO implements IO {
  * Representation of a StdIO
  * This contains methods to output content in the IO and reads inputs
  */
-class StdIO extends AIO {
+export class StdIO extends AIO {
 	constructor() {
 		super(process.stdin, process.stdout, process.stdout);
 	}

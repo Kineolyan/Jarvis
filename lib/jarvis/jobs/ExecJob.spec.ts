@@ -1,7 +1,8 @@
+const _ = require('lodash');
+import {expect} from 'chai';
+
 import ExecJob from './ExecJob';
 import store from '../storage/Store';
-
-import _ from 'lodash';
 
 store.forTests();
 

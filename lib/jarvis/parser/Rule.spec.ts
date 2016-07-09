@@ -1,5 +1,7 @@
+const _ = require('lodash');
+import {expect} from 'chai';
+
 import Rule from './Rule';
-import _ from 'lodash';
 
 describe('Jarvis::Parse::Rule', function () {
   describe('#match', function () {

@@ -1,9 +1,10 @@
 {
     "compilerOptions": {
-        "target": "es6",
         "declaration": false,
+        "moduleResolution": "node",
+        "outDir": "../dist",
         "removeComments": false,
-        "moduleResolution": "classic"
+        "target": "es6"
     },
     "filesGlob": [
         "./**/*.ts",

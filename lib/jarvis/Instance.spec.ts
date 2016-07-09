@@ -1,6 +1,6 @@
 ///<reference path="../../typings/index.d.ts"/>
 
-import _ from 'lodash';
+const _ = require('lodash');
 import {expect} from 'chai';
 
 import Instance from './Instance';

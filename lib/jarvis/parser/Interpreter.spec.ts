@@ -1,10 +1,11 @@
+const _ = require('lodash');
+import {expect} from 'chai';
+
 import Rule from './Rule';
 import Interpreter from './Interpreter';
 import Dialog from '../interface/Dialog';
 import JobManager from '../jobs/JobManager';
 import { MockIO } from '../interface/IOs';
-
-import _ from 'lodash';
 
 describe('Jarvis::Parser::Interpreter', function () {
   beforeEach(function () {
