@@ -44,6 +44,19 @@ export interface IO {
 	report(message: string): void;
 }
 
+const IoCompletions = (function() {
+	let values;
+	return function() {
+		if (values === undefined) {
+			values = _.flatten([
+				['quit', 'exit'],
+				_.keys(ExecJob.tasks()).map(cmd => `run '${cmd}'`)
+			]);
+		}
+		return values;
+	};
+})();
+
 class AIO implements IO {
 	private _intf: any;
 	constructor(
@@ -55,6 +68,10 @@ class AIO implements IO {
 			completer: this.complete.bind(this)
 		});
 		this._intf.setPrompt('>');
+	}
+
+	static completions() {
+		return IoCompletions;
 	}
 
 	prompt(message, lineFeed = true) {
@@ -93,19 +110,6 @@ class AIO implements IO {
 		return [hits.length ? hits : completions, line]
 	}
 }
-
-AIO.completions = (function() {
-	let values;
-	return function() {
-		if (values === undefined) {
-			values = _.flatten([
-				['quit', 'exit'],
-				_.keys(ExecJob.tasks()).map(cmd => `run '${cmd}'`)
-			]);
-		}
-		return values;
-	};
-})();
 
 /**
  * Representation of a StdIO

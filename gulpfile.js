@@ -53,7 +53,7 @@ gulp.task('build', function() {
     // removeComments: true,
     moduleResolution: 'node',
     // noExternalResolve: true,
-    declaration: true,
+    declaration: false,
     module: 'commonjs',
     verbose: true,
     rootDir,
