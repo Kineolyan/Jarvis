@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const rl = require('readline');
-import { Readable, Writable } from 'stream';
+const { Readable, Writable } = require('stream');
 import ExecJob from '../jobs/ExecJob';
 
 export class StringReabable extends Readable {

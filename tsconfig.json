@@ -2,13 +2,13 @@
     "compilerOptions": {
         "declaration": false,
         "moduleResolution": "node",
-        "outDir": "../dist",
+        "outDir": "./dist",
         "removeComments": false,
         "target": "es6"
     },
     "filesGlob": [
-        "./**/*.ts",
-        "../typings/**/*.d.ts"
+        "./lib/**/*.ts",
+        "./typings/**/*.d.ts"
     ],
     "files": [],
     "compileOnSave": false,

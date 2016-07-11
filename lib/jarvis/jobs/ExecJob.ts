@@ -1,4 +1,4 @@
-import * as CP from 'child_process';
+import CP = require('child_process');
 import store from '../storage/Store';
 
 export interface ExecDefinition {
@@ -33,8 +33,8 @@ export class ExecJob {
     });
   }
 
-  static tasks(): ExecDefinition[];
-  static tasks(key: string): {[key: string]: ExecDefinition};
+  static tasks(): {[key: string]: ExecDefinition};
+  static tasks(key: string): ExecDefinition;
   static tasks(key?: string): any {
     const values = store.load('execs');
     return key !== undefined ? values[key] : values;

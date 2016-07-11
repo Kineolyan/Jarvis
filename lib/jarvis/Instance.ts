@@ -1,4 +1,4 @@
-import EventEmitter from 'events';
+const EventEmitter = require('events');
 
 import Dialog from './interface/Dialog';
 import Interpreter from './parser/Interpreter';
