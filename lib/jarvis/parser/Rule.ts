@@ -1,4 +1,4 @@
-interface RuleAction {
+export interface RuleAction {
   (value: any): any
 }
 

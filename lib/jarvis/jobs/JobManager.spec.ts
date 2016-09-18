@@ -1,6 +1,8 @@
-import JobManager from 'jarvis/jobs/JobManager';
-import { MockIO } from 'jarvis/interface/IOs';
-import Dialog from 'jarvis/interface/Dialog';
+import {expect} from 'chai';
+
+import JobManager from './JobManager';
+import { MockIO } from '../interface/IOs';
+import Dialog from '../interface/Dialog';
 
 describe('Jarvis::Jobs::JobManager', function () {
   beforeEach(function () {

@@ -1,4 +1,4 @@
-import { IO } from 'jarvis/interface/IOs';
+import { IO } from './IOs';
 
 /**
  * Facade providing methods to enable dialogs between a user and the IA.

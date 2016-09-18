@@ -1,9 +1,11 @@
-import Dialog from 'jarvis/interface/Dialog';
-import Interpreter from 'jarvis/parser/Interpreter';
-import Rule from 'jarvis/parser/Rule';
-import EventEmitter from 'events';
-import JobManager from 'jarvis/jobs/JobManager';
-import ExecJob from 'jarvis/jobs/ExecJob';
+import {EventEmitter} from 'events';
+
+import Dialog from './interface/Dialog';
+import Interpreter from './parser/Interpreter';
+import Rule from './parser/Rule';
+import JobManager from './jobs/JobManager';
+import ExecJob from './jobs/ExecJob';
+import { IO } from './interface/IOs';
 
 /**
  * The main class of the project starting everything
@@ -14,7 +16,7 @@ class Instance extends EventEmitter {
   private _jobMgr: JobManager;
   private _interpreter: Interpreter;
 
-  constructor(io, name) {
+  constructor(io: IO, name: string) {
     super();
 
     this._running = false;

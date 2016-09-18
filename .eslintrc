@@ -25,7 +25,6 @@
     "React": true,
     "io": true
   },
-  "parser": "babel-eslint",
   "plugins": [],
   "rules": {
     // Potential errors

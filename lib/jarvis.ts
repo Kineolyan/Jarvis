@@ -1,5 +1,5 @@
-import { StdIO } from 'jarvis/interface/IOs';
-import Instance from 'jarvis/Instance';
+import { StdIO } from './jarvis/interface/IOs';
+import Instance from './jarvis/Instance';
 
 export default function app(name) {
   const io = new StdIO();

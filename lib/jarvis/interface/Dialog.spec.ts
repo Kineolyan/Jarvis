@@ -1,7 +1,8 @@
-import Dialog from 'jarvis/interface/Dialog';
-import { MockIO } from 'jarvis/interface/IOs';
+const _ = require('lodash');
+import {expect} from 'chai';
 
-import _ from 'lodash';
+import Dialog from './Dialog';
+import { MockIO } from './IOs';
 
 describe('Jarvis.Interface.Dialog', function() {
 	beforeEach(function() {

@@ -1,28 +1,20 @@
 {
     "compilerOptions": {
-        "outDir": "dist",
-        "target": "es6",
         "declaration": false,
-        "removeComments": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "outDir": "./dist",
+        "removeComments": false,
+        "target": "es6"
     },
     "filesGlob": [
-        "lib/**/*.ts",
-        "!lib/**/*.spec.ts",
-        "!node_modules/**"
+        "./lib/**/*.ts",
+        "./typings/**/*.d.ts"
     ],
-    "files": [
-        "lib/jarvis.ts",
-        "lib/jarvis/Instance.ts",
-        "lib/jarvis/interface/Dialog.ts",
-        "lib/jarvis/interface/IOs.ts",
-        "lib/jarvis/jobs/ExecJob.ts",
-        "lib/jarvis/jobs/JobManager.ts",
-        "lib/jarvis/parser/Interpreter.ts",
-        "lib/jarvis/parser/Rule.ts",
-        "lib/jarvis/storage/Store.ts"
-    ],
+    "files": [],
+    "compileOnSave": false,
+    "buildOnSave": false,
     "atom": {
-        "rewriteTsconfig": true
+        "rewriteTsconfig": false,
+        "compileOnSave": false
     }
 }

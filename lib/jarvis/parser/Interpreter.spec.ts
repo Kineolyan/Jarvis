@@ -1,10 +1,11 @@
-import Rule from 'jarvis/parser/Rule';
-import Interpreter from 'jarvis/parser/Interpreter';
-import Dialog from 'jarvis/interface/Dialog';
-import JobManager from 'jarvis/jobs/JobManager';
-import { MockIO } from 'jarvis/interface/IOs';
+const _ = require('lodash');
+import {expect} from 'chai';
 
-import _ from 'lodash';
+import Rule from './Rule';
+import Interpreter from './Interpreter';
+import Dialog from '../interface/Dialog';
+import JobManager from '../jobs/JobManager';
+import { MockIO } from '../interface/IOs';
 
 describe('Jarvis::Parser::Interpreter', function () {
   beforeEach(function () {

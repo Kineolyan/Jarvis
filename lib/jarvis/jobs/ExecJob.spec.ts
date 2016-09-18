@@ -1,7 +1,8 @@
-import ExecJob from 'jarvis/jobs/ExecJob';
-import store from 'jarvis/storage/Store';
+const _ = require('lodash');
+import {expect} from 'chai';
 
-import _ from 'lodash';
+import ExecJob from './ExecJob';
+import store from '../storage/Store';
 
 store.forTests();
 
