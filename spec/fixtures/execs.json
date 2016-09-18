@@ -1,0 +1,8 @@
+{
+  "test": {
+    "cmd": "echo 'test'"
+  },
+  "jarvis": {
+    "cmd": "echo \"running 'jarvis'\""
+  }
+}
