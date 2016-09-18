@@ -5,11 +5,11 @@
   "main": "bin/summer",
   "scripts": {
     "build": "gulp build",
-    "git": "gulp git",
     "gulp": "gulp",
     "test": "gulp test",
     "typings": "typings",
-    "postinstall": "typings install"
+    "postinstall": "typings install",
+    "do_the_thing": "gulp do_the_thing"
   },
   "repository": {
     "type": "git",

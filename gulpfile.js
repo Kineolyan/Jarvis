@@ -44,7 +44,8 @@ function toFileUri(filePath) {
 	return 'file://' + filePath.replace(/\\/g, '/');
 }
 
-gulp.task('build', function() {
+
+gulp.task('build', function buildProject() {
 	const rootDir = path.join(__dirname, 'lib');
 
   const opts = {
@@ -65,7 +66,7 @@ gulp.task('build', function() {
 		.pipe(gulp.dest(PATHS.dist()));
 });
 
-gulp.task('test', function() {
+function testProject() {
 	setUpModules();
 	const chai = require('chai');
 
@@ -73,9 +74,10 @@ gulp.task('test', function() {
 
   return gulp.src([PATHS.dist('**/*.spec.js')], { read: false })
     .pipe(mocha({ ui: 'bdd', reporter: 'spec' }));
-});
+}
+gulp.task('test', testProject);
 
-gulp.task('lint', function() {
+gulp.task('lint', function lint() {
 	var eslint = require('gulp-eslint');
 
 	return gulp.src([
@@ -88,4 +90,5 @@ gulp.task('lint', function() {
 	//.pipe(plumber.stop());
 });
 
-gulp.task('git', ['test', 'lint']);
+gulp.task('_build_test_task', ['build'], testProject)
+gulp.task('do_the_thing', ['_build_test_task', 'lint']);
