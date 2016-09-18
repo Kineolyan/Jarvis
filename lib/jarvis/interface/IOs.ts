@@ -1,11 +1,11 @@
 const _ = require('lodash');
 const rl = require('readline');
-const { Readable, Writable } = require('stream');
+import { Readable, Writable } from 'stream';
 import ExecJob from '../jobs/ExecJob';
 
-export class StringReabable extends Readable {
+export class StringReadable extends Readable {
 	public inputs: Array<string>;
-	constructor(opts) {
+	constructor(opts: any) {
 		super(opts);
 		this.inputs = [];
 	}
@@ -18,7 +18,7 @@ export class StringReabable extends Readable {
 
 export class StringWritable extends Writable {
 	public content: Array<string>;
-	constructor(opts) {
+	constructor(opts: any) {
 		super(opts);
 		this.content = [];
 	}
@@ -60,9 +60,9 @@ const IoCompletions = (function(): () => string[] {
 export class AIO implements IO {
 	private _intf: any;
 	constructor(
-		protected _in: Readable,
-		protected _out: Writable,
-		protected _err: Writable) {
+		protected _in: ReadableStream,
+		protected _out: WritableStream,
+		protected _err: WritableStream) {
 		this._intf = rl.createInterface({
 			input: this._in, output: this._out,
 			completer: this.complete.bind(this)
@@ -130,11 +130,11 @@ export class StdIO extends AIO {
  * This is mainly interesting for tests.
  */
 export class StringIO extends AIO {
-	constructor({ in: in_, out, err } = {}) {
+	constructor(options = {in: null, out: null, err: null}) {
 		super(
-			in_ || new StringReabable(),
-			out || new StringWritable(),
-			err || new StringWritable()
+			options.in || new StringReadable(),
+			options.out || new StringWritable(),
+			options.err || new StringWritable()
 		);
 	}
 

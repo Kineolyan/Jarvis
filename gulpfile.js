@@ -68,7 +68,6 @@ gulp.task('build', function() {
 gulp.task('test', function() {
 	setUpModules();
 	const chai = require('chai');
-	require('babel-register');
 
   chai.config.includeStack = true;
 
@@ -81,7 +80,7 @@ gulp.task('lint', function() {
 
 	return gulp.src([
 			PATHS.bin('*.js'),
-			PATHS.lib('**/*.js')//, `!${PATHS.lib('**/*.spec.js')}` // Skip specs
+			PATHS.lib('**/*.js')
 		])//.pipe(plumber({ errorHandler: notify.onError("test:lint : <%= error.message %>") }))
 		.pipe(eslint())
 		.pipe(eslint.formatEach('stylish'))

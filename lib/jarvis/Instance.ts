@@ -1,10 +1,11 @@
-const EventEmitter = require('events');
+import {EventEmitter} from 'events';
 
 import Dialog from './interface/Dialog';
 import Interpreter from './parser/Interpreter';
 import Rule from './parser/Rule';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
+import { IO } from './interface/IOs';
 
 /**
  * The main class of the project starting everything
@@ -15,7 +16,7 @@ class Instance extends EventEmitter {
   private _jobMgr: JobManager;
   private _interpreter: Interpreter;
 
-  constructor(io, name: string) {
+  constructor(io: IO, name: string) {
     super();
 
     this._running = false;
