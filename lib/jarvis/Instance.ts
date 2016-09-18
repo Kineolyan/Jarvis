@@ -2,7 +2,7 @@ import {EventEmitter} from 'events';
 
 import Dialog from './interface/Dialog';
 import Interpreter from './parser/Interpreter';
-import Rule from './parser/Rule';
+import {RunRule, QuitRule} from './parser/basicRules';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
 import { IO } from './interface/IOs';
@@ -29,32 +29,8 @@ class Instance extends EventEmitter {
     this._jobMgr = new JobManager(this._dialog);
     this._interpreter = new Interpreter(this._jobMgr);
 
-    this._interpreter.rules.push(new Rule(
-      /^run (?:'(.+?)'|"(.+?)")/,
-      matches => {
-        const name = matches[1];
-        const job = ExecJob.create(name);
-        if (job !== undefined) {
-          this._dialog.say(`Running '${name}'`);
-          return job.execute()
-            .then(out => {
-              this._logger.log(`['${name} output]`, out);
-              return out;
-            })
-            .catch(err => {
-              this._logger.error(`[${name} error]`, err);
-              return Promise.reject(err);
-            });
-        } else {
-          this._dialog.report(`Task ${name} does not exist`);
-          return false;
-        }
-      }
-    ));
-    this._interpreter.rules.push(new Rule(
-      /^\s*(exit|quit)\s*$/,
-      () => this.quit()
-    ));
+    this._interpreter.rules.push(new RunRule(this._dialog, this._logger));
+    this._interpreter.rules.push(new QuitRule(() => this.quit()));
   }
 
   get running() {
