@@ -11,6 +11,8 @@ describe('Jarvis::Instance', function () {
   beforeEach(function () {
     this.io = new MockIO();
     this.instance = new Instance(this.io, 'Celia');
+    // Silent logger
+    this.instance._logger = {log: _.noop, error: _.noop};
   });
 
   describe('#constructor', function () {

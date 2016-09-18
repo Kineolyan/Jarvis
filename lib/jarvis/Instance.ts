@@ -15,11 +15,13 @@ class Instance extends EventEmitter {
   private _dialog: Dialog;
   private _jobMgr: JobManager;
   private _interpreter: Interpreter;
+  private _logger: any;
 
   constructor(io: IO, name: string) {
     super();
 
     this._running = false;
+    this._logger = console;
     this._dialog = new Dialog(io);
     if (name !== undefined) {
       this._dialog.name = name;
@@ -34,7 +36,15 @@ class Instance extends EventEmitter {
         const job = ExecJob.create(name);
         if (job !== undefined) {
           this._dialog.say(`Running '${name}'`);
-          return job.execute();
+          return job.execute()
+            .then(out => {
+              this._logger.log(`['${name} output]`, out);
+              return out;
+            })
+            .catch(err => {
+              this._logger.error(`[${name} error]`, err);
+              return Promise.reject(err);
+            });
         } else {
           this._dialog.report(`Task ${name} does not exist`);
           return false;
