@@ -49,8 +49,11 @@ const IoCompletions = (function(): () => string[] {
 	return function(): string[] {
 		if (values === undefined) {
 			values = _.flatten([
-				['quit', 'exit'],
-				_.keys(ExecJob.tasks()).map(cmd => `run '${cmd}'`)
+				['quit', 'exit', 'record \'', 'record "'],
+				_(ExecJob.tasks()).keys()
+					.map(cmd => [`run '${cmd}'`, `clear '${cmd}'`])
+					.flatten()
+					.value()
 			]);
 		}
 		return values;
@@ -160,7 +163,7 @@ export class MockIO implements IO {
 	public out: Array<string>;
 	public err: Array<string>;
 
-	constructor() {
+	constructor(private _lnOnQuestion: boolean = false) {
 		this.inputs = [];
 		this.out = [];
 		this.err = [];
@@ -174,7 +177,7 @@ export class MockIO implements IO {
 	}
 
 	question(message) {
-		this.prompt(message, false);
+		this.prompt(message, this._lnOnQuestion);
 		const input = this.inputs.shift();
 		if (input !== undefined) {
 			return new Promise(resolve => resolve(input));
@@ -187,7 +190,8 @@ export class MockIO implements IO {
 		this.err.push(`${message}\n`);
 	}
 
-	input(...values) {
+	input(...values): MockIO {
 		this.inputs.push(...values);
+		return this;
 	}
 }
