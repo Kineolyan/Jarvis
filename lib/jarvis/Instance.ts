@@ -2,9 +2,11 @@ import {EventEmitter} from 'events';
 
 import Dialog from './interface/Dialog';
 import Interpreter from './parser/Interpreter';
-import Rule from './parser/Rule';
+import {RunRule, QuitRule} from './parser/basicRules';
+import {RecordRule, ClearRule} from './parser/autoRules';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
+import store from './storage/Store'; // FIXME stop using singleton
 import { IO } from './interface/IOs';
 
 /**
@@ -15,11 +17,13 @@ class Instance extends EventEmitter {
   private _dialog: Dialog;
   private _jobMgr: JobManager;
   private _interpreter: Interpreter;
+  private _logger: any;
 
   constructor(io: IO, name: string) {
     super();
 
     this._running = false;
+    this._logger = console;
     this._dialog = new Dialog(io);
     if (name !== undefined) {
       this._dialog.name = name;
@@ -27,24 +31,11 @@ class Instance extends EventEmitter {
     this._jobMgr = new JobManager(this._dialog);
     this._interpreter = new Interpreter(this._jobMgr);
 
-    this._interpreter.rules.push(new Rule(
-      /^run (?:'(.+?)'|"(.+?)")/,
-      matches => {
-        const name = matches[1];
-        const job = ExecJob.create(name);
-        if (job !== undefined) {
-          this._dialog.say(`Running '${name}'`);
-          return job.execute();
-        } else {
-          this._dialog.report(`Task ${name} does not exist`);
-          return false;
-        }
-      }
-    ));
-    this._interpreter.rules.push(new Rule(
-      /^\s*(exit|quit)\s*$/,
-      () => this.quit()
-    ));
+    this._interpreter.rules.push(new RunRule(this._dialog, this._logger));
+    this._interpreter.rules.push(new QuitRule(() => this.quit()));
+
+    this._interpreter.rules.push(new RecordRule(this._dialog, store));
+    this._interpreter.rules.push(new ClearRule(store));
   }
 
   get running() {
