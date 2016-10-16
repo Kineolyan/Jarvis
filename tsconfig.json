@@ -10,9 +10,12 @@
         "./lib/**/*.ts",
         "./typings/**/*.d.ts"
     ],
+    "exclude": [
+        "./node_modules"
+    ],
     "files": [],
-    "compileOnSave": false,
-    "buildOnSave": false,
+    "compileOnSave": true,
+    "buildOnSave": true,
     "atom": {
         "rewriteTsconfig": false,
         "compileOnSave": false
