@@ -1,5 +1,3 @@
-///<reference path="../../typings/index.d.ts"/>
-
 const _ = require('lodash');
 import {expect} from 'chai';
 

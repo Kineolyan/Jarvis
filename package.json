@@ -4,11 +4,10 @@
   "description": "My own Jarvis project",
   "main": "bin/summer",
   "scripts": {
-    "build": "gulp build",
+    "clean": "del-cli ./dist",
+    "build": "tsc --project ./tsconfig.json",
     "gulp": "gulp",
     "test": "gulp test",
-    "typings": "typings",
-    "postinstall": "typings install",
     "do_the_thing": "gulp do_the_thing",
     "tsc": "tsc"
   },
@@ -27,6 +26,7 @@
   "homepage": "https://github.com/Kineolyan/Jarvis#readme",
   "dependencies": {
     "chai": "^3.5.0",
+    "del-cli": "^0.2.0",
     "event-stream": "^3.3.3",
     "gulp": "^3.9.1",
     "gulp-mocha": "^2.2.0",
@@ -34,8 +34,7 @@
     "gulp-typescript": "^2.13.4",
     "lodash": "^4.11.2",
     "mocha": "^2.4.5",
-    "typescript": "2.0.3",
-    "typings": "^1.3.3"
+    "typescript": "2.0.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.37",

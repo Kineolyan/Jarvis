@@ -3,9 +3,9 @@ const rl = require('readline');
 import { Readable, Writable } from 'stream';
 import ExecJob from '../jobs/ExecJob';
 
-export class StringReadable extends Readable {
+class StringReadable extends Readable {
 	public inputs: Array<string>;
-	constructor(opts: any) {
+	constructor(opts?: any) {
 		super(opts);
 		this.inputs = [];
 	}
@@ -16,9 +16,9 @@ export class StringReadable extends Readable {
 	}
 }
 
-export class StringWritable extends Writable {
+class StringWritable extends Writable {
 	public content: Array<string>;
-	constructor(opts: any) {
+	constructor(opts?: any) {
 		super(opts);
 		this.content = [];
 	}
@@ -38,7 +38,7 @@ export class StringWritable extends Writable {
 	}
 }
 
-export interface IO {
+interface IO {
 	prompt(message: string, lineFeed?: boolean): void;
 	question(message: string): Promise<any>;
 	report(message: string): void;
@@ -60,7 +60,7 @@ const IoCompletions = (function(): () => string[] {
 	};
 })();
 
-export class AIO implements IO {
+class AIO implements IO {
 	private _intf: any;
 	constructor(
 		protected _in: ReadableStream,
@@ -118,7 +118,7 @@ export class AIO implements IO {
  * Representation of a StdIO
  * This contains methods to output content in the IO and reads inputs
  */
-export class StdIO extends AIO {
+class StdIO extends AIO {
 	constructor() {
 		super(process.stdin, process.stdout, process.stdout);
 	}
@@ -132,7 +132,7 @@ export class StdIO extends AIO {
  * IO working with strings.
  * This is mainly interesting for tests.
  */
-export class StringIO extends AIO {
+class StringIO extends AIO {
 	constructor(options = {in: null, out: null, err: null}) {
 		super(
 			options.in || new StringReadable(),
@@ -158,7 +158,7 @@ export class StringIO extends AIO {
 	}
 }
 
-export class MockIO implements IO {
+class MockIO implements IO {
 	public inputs: Array<string>;
 	public out: Array<string>;
 	public err: Array<string>;
@@ -195,3 +195,15 @@ export class MockIO implements IO {
 		return this;
 	}
 }
+
+export {
+	// Interfaces
+	IO,
+	// Implementations
+	StringReadable,
+	StringWritable,
+	AIO,
+	StdIO,
+	StringIO,
+	MockIO
+};

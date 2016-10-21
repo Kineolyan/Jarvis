@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
         "declaration": false,
+        "module": "commonjs",
         "moduleResolution": "node",
         "outDir": "./dist",
         "removeComments": false,
+        "rootDir": "./lib",
         "target": "es6"
     },
-    "filesGlob": [
-        "./lib/**/*.ts",
-        "./typings/**/*.d.ts"
+    "include": [
+        "./lib/**/*.ts"
     ],
     "exclude": [
         "./node_modules"
