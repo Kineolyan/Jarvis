@@ -7,8 +7,8 @@
     "clean": "del-cli ./dist",
     "build": "tsc --project ./tsconfig.json",
     "gulp": "gulp",
-    "test": "gulp test",
-    "do_the_thing": "gulp do_the_thing",
+    "test": "jest ./dist",
+    "do_the_thing": "del-cli ./dist && tsc --project ./tsconfig.json && jest ./dist",
     "tsc": "tsc"
   },
   "repository": {
@@ -27,7 +27,6 @@
   "dependencies": {
     "chai": "^3.5.0",
     "del-cli": "^0.2.0",
-    "event-stream": "^3.3.3",
     "gulp": "^3.9.1",
     "gulp-mocha": "^2.2.0",
     "gulp-tsb": "^1.10.4",
