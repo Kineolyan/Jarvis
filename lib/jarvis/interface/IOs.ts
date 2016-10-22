@@ -63,9 +63,9 @@ const IoCompletions = (function(): () => string[] {
 class AIO implements IO {
 	private _intf: any;
 	constructor(
-		protected _in: ReadableStream,
-		protected _out: WritableStream,
-		protected _err: WritableStream) {
+		protected _in: NodeJS.ReadableStream,
+		protected _out: NodeJS.WritableStream,
+		protected _err: NodeJS.WritableStream) {
 		this._intf = rl.createInterface({
 			input: this._in, output: this._out,
 			completer: this.complete.bind(this)
