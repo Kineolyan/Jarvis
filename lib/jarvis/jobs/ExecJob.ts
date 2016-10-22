@@ -1,4 +1,4 @@
-import CP = require('child_process');
+import * as CP from 'child_process';
 import store from '../storage/Store';
 
 export interface ExecDefinition {

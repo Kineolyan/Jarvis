@@ -4,12 +4,13 @@
   "description": "My own Jarvis project",
   "main": "bin/summer",
   "scripts": {
-    "build": "gulp build",
-    "gulp": "gulp",
-    "test": "gulp test",
-    "typings": "typings",
-    "postinstall": "typings install",
-    "do_the_thing": "gulp do_the_thing"
+    "build": "tsc --project ./tsconfig.json",
+    "clean": "del-cli ./dist",
+    "do_the_thing": "npm run clean && npm run build && npm test",
+    "test": "jest ./dist",
+    "tsc": "tsc",
+    "watch:build": "tsc --project ./tsconfig.json --watch",
+    "watch:test": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -26,18 +27,26 @@
   "homepage": "https://github.com/Kineolyan/Jarvis#readme",
   "dependencies": {
     "chai": "^3.5.0",
-    "event-stream": "^3.3.3",
+    "del-cli": "^0.2.0",
     "gulp": "^3.9.1",
     "gulp-mocha": "^2.2.0",
     "gulp-tsb": "^1.10.4",
     "gulp-typescript": "^2.13.4",
     "lodash": "^4.11.2",
     "mocha": "^2.4.5",
-    "typescript": "^1.8.10",
-    "typings": "^1.3.3"
+    "typescript": "2.0.3"
   },
   "devDependencies": {
+    "@types/chai": "^3.4.34",
+    "@types/jest": "^15.1.32",
+    "@types/lodash": "^4.14.37",
+    "@types/node": "^6.0.45",
     "gulp-eslint": "^2.0.0",
     "jest": "^16.0.1"
+  },
+  "jest": {
+    "moduleFileExtensions": ["ts", "tsx", "js"],
+    "scriptPreprocessor": "<rootDir>/spec/preprocessor.js",
+    "testRegex": "\\.spec\\.(tsx?|js)$"
   }
 }
