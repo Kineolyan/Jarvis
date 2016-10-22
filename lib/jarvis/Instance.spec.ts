@@ -4,6 +4,9 @@ import {expect} from 'chai';
 import Instance from './Instance';
 import { MockIO } from './interface/IOs';
 import Rule from './parser/Rule';
+import store from './storage/Store';
+
+store.forTests();
 
 describe('Jarvis::Instance', function () {
   beforeEach(function () {
