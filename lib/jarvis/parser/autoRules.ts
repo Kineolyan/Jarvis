@@ -11,10 +11,11 @@ class RecordRule extends Rule {
 	constructor(private _dialog: Dialog, private _store: Store) {
 		super(
 			/^record (?:'(.+?)'|"(.+?)")/,
-			matches => {
-				const name = matches[1] || matches[2];
+			args => {
+				const name = args[1] || args[2];
 				let newCmd: ExecDefinition = null;
-				return this._dialog.ask('Command to execute: ')
+
+				const progress = this._dialog.ask('Command to execute: ')
 					.then(cmd => {
 						newCmd = {cmd};
 						return this._dialog.ask('Pwd for command (opt.): ');
@@ -25,6 +26,7 @@ class RecordRule extends Rule {
 					}).then(() => {
 						this._store.add(EXEC_STORE, name, newCmd);
 					});
+				return { asynchronous: false, progress };
 			}
 		)
 	}
@@ -34,10 +36,10 @@ class ClearRule extends Rule {
 	constructor(private _store: Store) {
 		super(
 			/^clear (?:'(.+?)'|"(.+?)")/,
-			matches => {
-				const name = matches[1] || matches[2];
+			args => {
+				const name = args[1] || args[2];
 				this._store.delete(EXEC_STORE, name);
-				return Promise.resolve();
+				return { asynchronous: false, progress: null };
 			}
 		)
 	}

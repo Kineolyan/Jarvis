@@ -1,31 +1,28 @@
-import Rule from './Rule';
-import JobManager from '../jobs/JobManager';
+import Rule, {RuleResult} from './Rule';
 
 export class Interpreter {
   private _rules: Array<Rule>;
-  private _jobManager: JobManager;
-  constructor(jobManager) {
+  constructor() {
     this._rules = [];
-    this._jobManager = jobManager;
   }
 
   get rules() {
     return this._rules;
   }
 
-  interpret(message) {
+  /**
+   * Interprets a message from user.
+   * @param message - message to Interpreter
+   * @return result of the operation, or false if unknown
+   */
+  interpret(message: string): RuleResult {
     for (let rule of this._rules) {
       if (rule.match(message)) {
-        const result = rule.execute(message);
-        if(result !== undefined && result instanceof Promise) {
-          this._jobManager.registerJob(result);
-        }
-
-        return result;
+        return rule.execute(message);
       }
     }
 
-    return false;
+    return null;
   }
 }
 

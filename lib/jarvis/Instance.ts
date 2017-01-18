@@ -29,7 +29,7 @@ class Instance extends EventEmitter {
       this._dialog.name = name;
     }
     this._jobMgr = new JobManager(this._dialog);
-    this._interpreter = new Interpreter(this._jobMgr);
+    this._interpreter = new Interpreter();
 
     this._interpreter.rules.push(new RunRule(this._dialog, this._logger));
     this._interpreter.rules.push(new QuitRule(() => this.quit()));
@@ -62,11 +62,17 @@ class Instance extends EventEmitter {
   queryAction() {
     return this._dialog.ask('What to do?\n').then(answer => {
       const result = this._interpreter.interpret(answer);
-      if(!result) {
-        this._dialog.report('Unknown action');
-      }
+      if (result) {
+        if (result.asynchronous && result.progress) {
+            this._jobMgr.registerJob(result.progress);
+        }
 
-      return result;
+        return !result.asynchronous && result.progress ?
+          result.progress : Promise.resolve();
+      } else {
+        this._dialog.report('Unknown action');
+        return Promise.resolve();
+      }
     });
   }
 
@@ -74,6 +80,10 @@ class Instance extends EventEmitter {
     this._running = false;
     this._dialog.say('Good bye Sir');
     this.emit('close');
+    return {
+      asynchronous: false,
+      progress: null
+    };
   }
 }
 

@@ -4,14 +4,11 @@ import {expect} from 'chai';
 import Rule from './Rule';
 import Interpreter from './Interpreter';
 import Dialog from '../interface/Dialog';
-import JobManager from '../jobs/JobManager';
 import { MockIO } from '../interface/IOs';
 
 describe('Jarvis::Parser::Interpreter', function () {
   beforeEach(function () {
-    this.io = new MockIO();
-    this.jobMgr = new JobManager(new Dialog(this.io));
-    this.interpreter = new Interpreter(this.jobMgr);
+    this.interpreter = new Interpreter();
   });
 
   describe('#constructor', function () {
@@ -23,11 +20,14 @@ describe('Jarvis::Parser::Interpreter', function () {
   describe('#interpret', function () {
     beforeEach(function () {
       this.list = [];
-      ['a', 'b', 'ab?'].forEach(pattern => {
+      ['a', 'b', 'ab?'].forEach((pattern, i) => {
         this.interpreter.rules.push(new Rule(
           new RegExp(pattern), () => {
             this.list.push(pattern);
-            return pattern;
+            return {
+              asynchronous: i % 2 === 0,
+              progress: Promise.resolve(pattern)
+            };
         }));
       });
     });
@@ -42,7 +42,10 @@ describe('Jarvis::Parser::Interpreter', function () {
       });
 
       it('returns true since at least one rule matches', function () {
-        expect(this.result).to.eql('b');
+        expect(this.result.asynchronous).to.eql(false);
+        return this.result.progress.then(value => {
+          expect(value).to.eql('b');
+        });
       });
     });
 
@@ -56,47 +59,23 @@ describe('Jarvis::Parser::Interpreter', function () {
       });
 
       it('returns false', function () {
-        expect(this.result).to.be.false;
+        expect(this.result).to.equal(null);
       });
     });
 
     describe('with many matching rules', function () {
       beforeEach(function () {
-        this.result = this.interpreter.interpret('a');
+        return this.interpreter.interpret('a')
+          .progress.then(value => this.result = value);
       });
 
       it('executes the first matching rule', function () {
         expect(this.list).to.eql(['a']);
       });
 
-      it('returns true', function () {
+      it('returns the correct result', function () {
         expect(this.result).to.eql('a');
       });
-    });
-
-    describe('with Promise', function() {
-      beforeEach(function () {
-        this.interpreter.rules.push(new Rule(
-          /^exec/, () => new Promise(r => { this.resolver = r })
-        ));
-        this.result = this.interpreter.interpret('execute');
-      });
-
-      it('register the job in progress', function () {
-        const jobIds = this.jobMgr.jobs;
-        expect(jobIds).to.have.length(1);
-      });
-
-      it('returns the promise with job extension', function (done) {
-        expect(this.result).to.be.an.instanceof(Promise);
-        this.result
-          .then(() => {
-            expect(_.last(this.io.out)).to.match(/Task \d+ completed/);
-            expect(this.jobMgr.jobs).to.be.empty;
-            done();
-          });
-        this.resolver(1);
-      })
     });
   });
 

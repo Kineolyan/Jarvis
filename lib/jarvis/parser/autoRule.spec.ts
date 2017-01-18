@@ -6,36 +6,45 @@ import {RecordRule, ClearRule} from './autoRules';
 import {Store} from '../storage/Store';
 
 describe('RecordRule', function() {
-	beforeEach(function() {
-		this.io = new MockIO(true);
-		this.store = new Store().forTests();
+	let rule: RecordRule,
+		io: MockIO,
+		store: Store;
 
-		const dialog = new Dialog(this.io);
-		this.rule = new RecordRule(dialog, this.store);
+	beforeEach(function() {
+		io = new MockIO(true);
+		store = new Store().forTests();
+
+		const dialog = new Dialog(io);
+		rule = new RecordRule(dialog, store);
 	});
 
 	describe('#match', function() {
 		it('detect {record "action"}', function() {
-			expect(this.rule.match('record "action"')).to.eql(true);
+			expect(rule.match('record "action"')).to.eql(true);
 		});
 	});
 
 	describe('#execute', function() {
 		beforeEach(function() {
-			this.io.input('do something', 'nowhere');
-			return this.rule.execute('record "action"');
+			io.input('do something', 'nowhere');
+			this.result = rule.execute('record "action"');
+			return this.result.progress;
+		});
+
+		it('creates a synchronous result', function() {
+			expect(this.result.asynchronous).to.eql(false);
 		});
 
 		it('asks for the command', function() {
-			expect(this.io.out[0]).to.match(/>> Command to execute: \s*/);
+			expect(io.out[0]).to.match(/>> Command to execute: \s*/);
 		});
 
 		it('asks the path for the command', function() {
-			expect(this.io.out[1]).to.match(/>> Pwd for command \(opt\.\): \s*/);
+			expect(io.out[1]).to.match(/>> Pwd for command \(opt\.\): \s*/);
 		});
 
 		it('creates the rule', function() {
-			const tasks = this.store.get('execs');
+			const tasks = store.get('execs');
 			expect(tasks.action).to.eql({
 				cmd: 'do something',
 				cwd: 'nowhere'
@@ -43,10 +52,10 @@ describe('RecordRule', function() {
 		});
 
 		it('supports optional path', function() {
-			this.io.input('do.THE.thing', '');
-			return this.rule.execute('record "do-thing"')
-				.then(() => {
-					const tasks = this.store.get('execs');
+			io.input('do.THE.thing', '');
+			return rule.execute('record "do-thing"')
+				.progress.then(() => {
+					const tasks = store.get('execs');
 					expect(tasks['do-thing']).to.eql({ cmd: 'do.THE.thing' });
 				});
 		});
@@ -54,26 +63,29 @@ describe('RecordRule', function() {
 });
 
 describe('ClearRule', function() {
-	beforeEach(function() {
-		this.store = new Store().forTests();
-		this.store.add('execs', 'action', { cmd: 'cmd ' });
+	let rule: ClearRule,
+		store: Store;
 
-		this.rule = new ClearRule(this.store);
+	beforeEach(function() {
+		store = new Store().forTests();
+		store.add('execs', 'action', { cmd: 'cmd ' });
+
+		rule = new ClearRule(store);
 	});
 
 	describe('#match', function() {
 		it('detect {clear "action"}', function() {
-			expect(this.rule.match('clear "action"')).to.eql(true);
+			expect(rule.match('clear "action"')).to.eql(true);
 		});
 	});
 
 	describe('#execute', function() {
 		beforeEach(function() {
-			return this.rule.execute('clear "action"');
+			return rule.execute('clear "action"');
 		});
 
 		it('deletes the task from the store', function() {
-			const tasks = this.store.get('execs');
+			const tasks = store.get('execs');
 			expect(tasks).not.to.contain.keys(['action']);
 		});
 	});
