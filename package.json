@@ -7,7 +7,7 @@
     "build": "tsc --project ./tsconfig.json",
     "clean": "del-cli ./dist",
     "do_the_thing": "npm run clean && npm run build && npm test",
-    "test": "jest ./dist",
+    "test": "jest",
     "tsc": "tsc",
     "watch:build": "tsc --project ./tsconfig.json --watch",
     "watch:test": "jest --watch"
@@ -38,15 +38,24 @@
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
-    "@types/jest": "^15.1.32",
-    "@types/lodash": "^4.14.37",
+    "@types/jest": "^16.0.4",
+    "@types/lodash": "4.14.50",
     "@types/node": "^6.0.45",
     "gulp-eslint": "^2.0.0",
-    "jest": "^16.0.1"
+    "jest": "^18.1.0"
   },
   "jest": {
-    "moduleFileExtensions": ["ts", "tsx", "js"],
-    "scriptPreprocessor": "<rootDir>/spec/preprocessor.js",
-    "testRegex": "\\.spec\\.(tsx?|js)$"
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "testPathDirs": [
+      "<rootDir>/src",
+      "<rootDir>/dist"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "<rootDir>/spec/preprocessor.js"
+    },
+    "testRegex": ".*\\.spec\\.(ts|tsx|js)$"
   }
 }

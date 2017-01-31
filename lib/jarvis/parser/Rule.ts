@@ -1,5 +1,10 @@
+export interface RuleResult {
+  asynchronous: boolean,
+  progress: Promise<void> | undefined
+}
+
 export interface RuleAction {
-  (value: any): any
+  (value: any): RuleResult
 }
 
 export class Rule {
@@ -9,10 +14,9 @@ export class Rule {
     return this._expr.test(message);
   }
 
-  execute(message: string) {
+  execute(message: string): RuleResult {
     const matches = this._expr.exec(message);
-    const result = this._action(matches);
-    return result === undefined ? true : result;
+    return this._action(matches);
   }
 }
 

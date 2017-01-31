@@ -11,8 +11,13 @@ class StringReadable extends Readable {
 	}
 
 	_read() {
+		// The answer lies here
 		let input = this.inputs.shift();
-		this.push(input !== undefined ? `${input}\n` : null);
+		if (input) {
+			this.push(`${input}\n`);
+		} else {
+			this.push(null);
+		}
 	}
 }
 
@@ -62,6 +67,8 @@ const IoCompletions = (function(): () => string[] {
 
 class AIO implements IO {
 	private _intf: any;
+	private _questionStack: any;
+
 	constructor(
 		protected _in: NodeJS.ReadableStream,
 		protected _out: NodeJS.WritableStream,
@@ -71,6 +78,7 @@ class AIO implements IO {
 			completer: this.complete.bind(this)
 		});
 		this._intf.setPrompt('>');
+		this._questionStack = [];
 	}
 
 	static completions(): string[] {
@@ -84,14 +92,28 @@ class AIO implements IO {
 		}
 	}
 
+  private  answerQuestion(answer) {
+		const {resolve} = this._questionStack.pop();
+		resolve(answer);
+
+		if (!_.isEmpty(this._questionStack)) {
+			// Ask again the previous question
+			const {question: previousQuestion} = _.last(this._questionStack);
+			this._intf.question(previousQuestion, this.answerQuestion.bind(this));
+		}
+	}
+
 	question(message) {
 		return new Promise((resolve, reject) => {
-			try {
-				this._intf.question(message, function(answer) {
-					resolve(answer);
-				});
-			} catch (err) {
-				reject(err);
+			const hadQuestions = _.isEmpty(this._questionStack);
+
+			this._questionStack.push({resolve, question: message});
+			if (hadQuestions) {
+				try {
+					this._intf.question(message, this.answerQuestion.bind(this));
+				} catch (err) {
+					reject(err);
+				}
 			}
 		});
 	}
@@ -159,7 +181,7 @@ class StringIO extends AIO {
 }
 
 class MockIO implements IO {
-	public inputs: Array<string>;
+	public inputs: Array<string|Promise<string>>;
 	public out: Array<string>;
 	public err: Array<string>;
 
@@ -180,7 +202,7 @@ class MockIO implements IO {
 		this.prompt(message, this._lnOnQuestion);
 		const input = this.inputs.shift();
 		if (input !== undefined) {
-			return new Promise(resolve => resolve(input));
+			return input instanceof Promise ? input : new Promise(resolve => resolve(input));
 		} else {
 			throw new Error('no value for input');
 		}

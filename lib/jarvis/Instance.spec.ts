@@ -42,40 +42,101 @@ describe('Jarvis::Instance', function () {
         expect(this.io.err).to.eql(['[Celia]!! Unknown action\n']);
       });
     });
+
+    describe('with Promise returned by command', function() {
+      beforeEach(function () {
+        this.jobMgr = this.instance._jobMgr;
+        this.instance._interpreter.rules.push(new Rule(
+          /^exec/, () => ({
+            asynchronous: true,
+            progress: new Promise(r => { this.resolver = r })
+          })
+        ));
+        this.io.input('execute');
+
+        return this.instance.queryAction();
+      });
+
+      it('register the job in progress', function () {
+        const jobIds = this.jobMgr.jobs;
+        expect(jobIds).to.have.length(1);
+      });
+
+      it('returns the promise with job extension', function () {
+        const job = this.jobMgr.jobs[0];
+        this.resolver(1);
+        return job
+          .then(() => {
+            expect(_.last(this.io.out)).to.match(/Task \d+ completed/);
+            expect(this.jobMgr.jobs).to.be.empty;
+          });
+      })
+    });
   });
 
   describe('#start', function () {
-    beforeEach(function () {
-      this.count = 0;
+    describe('on scenario', function() {
+      beforeEach(function () {
+        this.count = 0;
+        this.instance._interpreter.rules.push(new Rule(
+          /(\d)/, () => {
+            this.count += 1;
+            return { asynchronous: false, progress: null };
+          }
+        ));
+        this.io.input('1', '2', 'nothing', 'quit');
+        return this.instance.start();
+      });
+
+      it.skip('flags as running', function () {
+        expect(this.count).to.be.above(0);
+      });
+
+      it('first great the user', function () {
+        expect(this.io.out[0]).to.eql('[Celia]>> Hello Sir\n');
+      });
+
+      it('asks to do something', function () {
+        expect(this.io.out[1]).to.eql('[Celia]>> What to do?\n');
+      });
+
+      it('calls repeatedly for actions', function () {
+        expect(this.io.inputs).to.be.empty;
+      });
+
+      it('executes matching actions', function () {
+        expect(this.count).to.eql(2);
+      });
+
+      it('ends when executing "quit" or "exit"', function () {
+        expect(this.instance.running).to.be.false;
+      });
+    });
+
+    it('can run multiple tasks in parallel', function() {
+      let lastQuestionResolver;
+      this.io.input(
+        // Two tasks in parallel
+        'execute', 'execute',
+        // One last input to resolve
+        new Promise(r => { lastQuestionResolver = r; })
+      );
+
+      const resolvers = [];
       this.instance._interpreter.rules.push(new Rule(
-        /(\d)/, () => { this.count += 1 }
+        /^exec/, () => {
+          const progress = new Promise(r => {
+            resolvers.push(r);
+            if (resolvers.length === 2) {
+              resolvers.forEach((resolver, i) => resolver(i));
+              lastQuestionResolver('quit'); // Ask to stop instance
+            }
+          });
+          return { asynchronous: true, progress };
+        }
       ));
-      this.io.input('1', '2', 'nothing', 'quit');
+
       return this.instance.start();
-    });
-
-    it.skip('flags as running', function () {
-      expect(this.count).to.be.above(0);
-    });
-
-    it('first great the user', function () {
-      expect(this.io.out[0]).to.eql('[Celia]>> Hello Sir\n');
-    });
-
-    it('asks to do something', function () {
-      expect(this.io.out[1]).to.eql('[Celia]>> What to do?\n');
-    });
-
-    it('calls repeatedly for actions', function () {
-      expect(this.io.inputs).to.be.empty;
-    });
-
-    it('executes matching actions', function () {
-      expect(this.count).to.eql(2);
-    });
-
-    it('ends when executing "quit" or "exit"', function () {
-      expect(this.instance.running).to.be.false;
     });
   });
 
