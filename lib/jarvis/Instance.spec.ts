@@ -49,7 +49,7 @@ describe('Jarvis::Instance', function () {
         this.instance._interpreter.rules.push(new Rule(
           /^exec/, () => ({
             asynchronous: true,
-            progress: new Promise(r => { this.resolver = r })
+            progress: new Promise<void>(r => { this.resolver = r })
           })
         ));
         this.io.input('execute');
@@ -125,7 +125,7 @@ describe('Jarvis::Instance', function () {
       const resolvers = [];
       this.instance._interpreter.rules.push(new Rule(
         /^exec/, () => {
-          const progress = new Promise(r => {
+          const progress = new Promise<void>(r => {
             resolvers.push(r);
             if (resolvers.length === 2) {
               resolvers.forEach((resolver, i) => resolver(i));
@@ -145,6 +145,14 @@ describe('Jarvis::Instance', function () {
       this.io.input('run \'jarvis\'');
       return this.instance.queryAction().then(() => {
         expect(this.io.out).to.include('[Celia]>> Running \'jarvis\'\n');
+      });
+    });
+
+    it('has a rule to print jobs', function () {
+      this.io.input('jobs');
+      return this.instance.queryAction().then(() => {
+        const jobOutput = this.io.out.filter(output => /Jobs at /.test(output));
+        expect(jobOutput).to.have.length(1, 'No output for jobs.');
       });
     });
 

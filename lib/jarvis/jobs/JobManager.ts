@@ -13,15 +13,28 @@ export class JobManager {
     return Array.from(this._jobs.values());
   }
 
-  registerJob(job: Promise<any>) {
+  registerJob<T>(job: Promise<T>): Promise<T> {
     const jobId = ++this._jobId;
     this._jobs.set(jobId, job);
-    return job.then((...args) => {
+    return job.then(result => {
       this._jobs.delete(jobId);
       this._dialog.say(`Task ${jobId} completed`);
 
-      return args;
+      return result;
     });
+  }
+
+  printJobs(): void {
+    const jobList = [];
+    this._jobs.forEach((job, key) => {
+      jobList.push(` * (${key})`)
+    });
+
+    const now = new Date();
+    const message = `Jobs at ${now.getHours()}h${now.getMinutes()}
+${jobList.length > 0 ? jobList.join('\n') : '-- No jobs registered'}`
+
+    this._dialog.say(message);
   }
 }
 

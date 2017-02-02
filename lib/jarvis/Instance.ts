@@ -4,6 +4,7 @@ import Dialog from './interface/Dialog';
 import Interpreter from './parser/Interpreter';
 import {RunRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
+import {JobsRule} from './parser/jobRules';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
 import store from './storage/Store'; // FIXME stop using singleton
@@ -36,6 +37,8 @@ class Instance extends EventEmitter {
 
     this._interpreter.rules.push(new RecordRule(this._dialog, store));
     this._interpreter.rules.push(new ClearRule(store));
+
+    this._interpreter.rules.push(new JobsRule(this._jobMgr));
   }
 
   get running() {
