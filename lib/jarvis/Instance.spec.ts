@@ -1,3 +1,4 @@
+import { JobManager } from './jobs/JobManager';
 const _ = require('lodash');
 import {expect} from 'chai';
 
@@ -9,66 +10,71 @@ import store from './storage/Store';
 store.forTests();
 
 describe('Jarvis::Instance', function () {
+  let io: MockIO;
+  let instance: Instance;
+
   beforeEach(function () {
-    this.io = new MockIO();
-    this.instance = new Instance(this.io, 'Celia');
+    io = new MockIO();
+    instance = new Instance(io, 'Celia');
     // Silent logger
-    this.instance._logger = {log: _.noop, error: _.noop};
+    (<any> instance)._logger = {log: _.noop, error: _.noop};
   });
 
   describe('#constructor', function () {
     it('is not running', function () {
-      expect(this.instance.running).to.be.false;
+      expect(instance.running).to.be.false;
     });
   });
 
   describe('#queryAction', function () {
     it('asks to do something', function () {
-      this.io.input('not important');
-      this.instance.queryAction();
-      expect(this.io.out).to.eql(['[Celia]>> What to do?\n']);
+      io.input('not important');
+      instance.queryAction();
+      expect(io.out).to.eql(['[Celia]>> What to do?\n']);
     });
 
     it('interprets the answer', function () {
-      this.io.input('exit');
-      return this.instance.queryAction().then(() => {
-        expect(this.io.inputs).to.be.empty;
+      io.input('exit');
+      return instance.queryAction().then(() => {
+        expect(io.inputs).to.be.empty;
       });
     });
 
     it('notifies if it cannot interpret', function () {
-      this.io.input('hello world');
-      return this.instance.queryAction().then(() => {
-        expect(this.io.err).to.eql(['[Celia]!! Unknown action\n']);
+      io.input('hello world');
+      return instance.queryAction().then(() => {
+        expect(io.err).to.eql(['[Celia]!! Unknown action\n']);
       });
     });
 
     describe('with Promise returned by command', function() {
+      let jobMgr: JobManager;
+
       beforeEach(function () {
-        this.jobMgr = this.instance._jobMgr;
-        this.instance._interpreter.rules.push(new Rule(
+        jobMgr = (<any> instance)._jobMgr;
+        (<any> instance)._interpreter.rules.push(new Rule(
           /^exec/, () => ({
             asynchronous: true,
-            progress: new Promise(r => { this.resolver = r })
+            progress: new Promise<void>(r => { this.resolver = r })
           })
         ));
-        this.io.input('execute');
+        io.input('execute');
 
-        return this.instance.queryAction();
+        return instance.queryAction();
       });
 
       it('register the job in progress', function () {
-        const jobIds = this.jobMgr.jobs;
+        const jobIds = jobMgr.jobs;
         expect(jobIds).to.have.length(1);
       });
 
       it('returns the promise with job extension', function () {
-        const job = this.jobMgr.jobs[0];
+        const record = jobMgr.jobs[0];
         this.resolver(1);
-        return job
+        return record.job
           .then(() => {
-            expect(_.last(this.io.out)).to.match(/Task \d+ completed/);
-            expect(this.jobMgr.jobs).to.be.empty;
+            expect(_.last(io.out)).to.match(/Task \d+ completed/);
+            expect(jobMgr.jobs).to.be.empty;
           });
       })
     });
@@ -78,14 +84,14 @@ describe('Jarvis::Instance', function () {
     describe('on scenario', function() {
       beforeEach(function () {
         this.count = 0;
-        this.instance._interpreter.rules.push(new Rule(
+        (<any> instance)._interpreter.rules.push(new Rule(
           /(\d)/, () => {
             this.count += 1;
             return { asynchronous: false, progress: null };
           }
         ));
-        this.io.input('1', '2', 'nothing', 'quit');
-        return this.instance.start();
+        io.input('1', '2', 'nothing', 'quit');
+        return instance.start();
       });
 
       it.skip('flags as running', function () {
@@ -93,15 +99,15 @@ describe('Jarvis::Instance', function () {
       });
 
       it('first great the user', function () {
-        expect(this.io.out[0]).to.eql('[Celia]>> Hello Sir\n');
+        expect(io.out[0]).to.eql('[Celia]>> Hello Sir\n');
       });
 
       it('asks to do something', function () {
-        expect(this.io.out[1]).to.eql('[Celia]>> What to do?\n');
+        expect(io.out[1]).to.eql('[Celia]>> What to do?\n');
       });
 
       it('calls repeatedly for actions', function () {
-        expect(this.io.inputs).to.be.empty;
+        expect(io.inputs).to.be.empty;
       });
 
       it('executes matching actions', function () {
@@ -109,13 +115,13 @@ describe('Jarvis::Instance', function () {
       });
 
       it('ends when executing "quit" or "exit"', function () {
-        expect(this.instance.running).to.be.false;
+        expect(instance.running).to.be.false;
       });
     });
 
     it('can run multiple tasks in parallel', function() {
       let lastQuestionResolver;
-      this.io.input(
+      io.input(
         // Two tasks in parallel
         'execute', 'execute',
         // One last input to resolve
@@ -123,9 +129,9 @@ describe('Jarvis::Instance', function () {
       );
 
       const resolvers = [];
-      this.instance._interpreter.rules.push(new Rule(
+      (<any> instance)._interpreter.rules.push(new Rule(
         /^exec/, () => {
-          const progress = new Promise(r => {
+          const progress = new Promise<void>(r => {
             resolvers.push(r);
             if (resolvers.length === 2) {
               resolvers.forEach((resolver, i) => resolver(i));
@@ -136,24 +142,32 @@ describe('Jarvis::Instance', function () {
         }
       ));
 
-      return this.instance.start();
+      return instance.start();
     });
   });
 
   describe('default configuration', function () {
     it('has a rule to run programs', function () {
-      this.io.input('run \'jarvis\'');
-      return this.instance.queryAction().then(() => {
-        expect(this.io.out).to.include('[Celia]>> Running \'jarvis\'\n');
+      io.input('run \'jarvis\'');
+      return instance.queryAction().then(() => {
+        expect(io.out).to.include('[Celia]>> Running \'jarvis\'\n');
+      });
+    });
+
+    it('has a rule to print jobs', function () {
+      io.input('jobs');
+      return instance.queryAction().then(() => {
+        const jobOutput = io.out.filter(output => /Jobs at /.test(output));
+        expect(jobOutput).to.have.length(1, 'No output for jobs.');
       });
     });
 
     ['quit', 'exit'].forEach(function(action) {
       it(`exits the program on ${action}`, function () {
-        this.io.input(action);
-        return this.instance.queryAction().then(() => {
-          expect(this.instance.running).to.be.false;
-          expect(_.last(this.io.out)).to.eql('[Celia]>> Good bye Sir\n');
+        io.input(action);
+        return instance.queryAction().then(() => {
+          expect(instance.running).to.be.false;
+          expect(_.last(io.out)).to.eql('[Celia]>> Good bye Sir\n');
         });
       })
     });

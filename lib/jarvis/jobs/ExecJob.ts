@@ -9,7 +9,7 @@ export interface ExecDefinition {
 export class ExecJob {
   constructor(private _def: ExecDefinition) {}
 
-  execute() {
+  execute(): Promise<any> {
     const options: any = {};
     if (this._def.cwd !== undefined) {
       options.cwd = this._def.cwd;

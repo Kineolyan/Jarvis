@@ -185,6 +185,10 @@ class MockIO implements IO {
 	public out: Array<string>;
 	public err: Array<string>;
 
+	/**
+	 * Constructor.
+	 * @param _lnOnQuestion jump to the next line on question
+	 */
 	constructor(private _lnOnQuestion: boolean = false) {
 		this.inputs = [];
 		this.out = [];

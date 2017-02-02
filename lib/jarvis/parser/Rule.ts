@@ -1,6 +1,7 @@
 export interface RuleResult {
   asynchronous: boolean,
-  progress: Promise<void> | undefined
+  progress?: Promise<void>,
+  description?: string
 }
 
 export interface RuleAction {
