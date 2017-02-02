@@ -21,7 +21,11 @@ class RunRule extends Rule {
               this._logger.error(`[${name} error]`, err);
               return Promise.reject(err);
             });
-          return { asynchronous: true, progress };
+          return {
+            asynchronous: true,
+            progress,
+            description: `${name} action running`
+          };
         } else {
           this._dialog.report(`Task ${name} does not exist`);
           return null;

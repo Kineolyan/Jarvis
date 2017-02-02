@@ -67,7 +67,7 @@ class Instance extends EventEmitter {
       const result = this._interpreter.interpret(answer);
       if (result) {
         if (result.asynchronous && result.progress) {
-            this._jobMgr.registerJob(result.progress);
+            this._jobMgr.registerJob(result.progress, result.description);
         }
 
         return !result.asynchronous && result.progress ?

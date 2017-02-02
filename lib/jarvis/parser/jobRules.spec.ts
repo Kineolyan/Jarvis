@@ -26,24 +26,13 @@ describe('JobsRule', function() {
 	});
 
 	describe('#execute', function() {
-		it('prints an empty list of tasks', function() {
+		it('prints the list of jobs', function() {
 			rule.execute('jobs');
 			expect(io.out).to.have.length(1);
 
 			const message = io.out[0];
 			expect(message).to.match(/Jobs at \d{1,2}h\d{1,2}/)
 				.and.to.contain('-- No jobs registered');
-		});
-
-		it('prints an empty list of tasks', function() {
-			_.times(2, i => manager.registerJob(new Promise(resolve => {})));
-
-			rule.execute('jobs');
-			expect(io.out).to.have.length(1);
-
-			const message = io.out[0];
-			expect(message).to.match(/Jobs at \d{1,2}h\d{1,2}/)
-				.and.to.match(/ \* \(\d+\)/);
 		});
 	});
 });

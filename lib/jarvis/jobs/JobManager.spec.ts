@@ -71,8 +71,21 @@ describe('Jarvis::Jobs::JobManager', function () {
 
 			expect(message[0]).to.match(/Jobs at \d{1,2}h\d{1,2}/);
       for (const jobLine of message.slice(1)) {
-        expect(jobLine).to.match(/ \* \(\d+\)/);
+        expect(jobLine).to.match(/ \* #\d+ \(since \d{1,2}h\d{1,2}\)/);
       }
+		});
+
+		it('prints the job description if any', function() {
+			_.times(2, i => mgr.registerJob(new Promise(resolve => {}), 'my action'));
+      mgr.printJobs();
+
+			expect(io.out).to.have.length(1);
+
+      const message = io.out[0].trim().split('\n');
+      expect(message).to.have.length(3, 'Wrong message length');
+
+			expect(message[0]).to.match(/Jobs at \d{1,2}h\d{1,2}/);
+      expect(message[1]).to.match(/ \* my action \(since \d{1,2}h\d{1,2}\)/);
 		});
 
 		it('evolves after task completions', function() {
