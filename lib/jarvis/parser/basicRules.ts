@@ -8,28 +8,28 @@ class RunRule extends Rule {
       /^run (?:'(.+?)'|"(.+?)")/,
       args => {
         const name = args[1];
-        const job = ExecJob.create(name);
+        const progress = ExecJob.create(name)
+          .then(job => {
+            if (job !== undefined) {
+              this._dialog.say(`Running '${name}'`);
+              return job.execute()
+                .then(out => {
+                  this._logger.log(`['${name} output]`, out);
+                })
+                .catch(err => {
+                  this._logger.error(`[${name} error]`, err);
+                  return Promise.reject(err);
+                });
+            } else {
+              this._dialog.report(`Task ${name} does not exist`);
+            }
+          });
 
-        if (job !== undefined) {
-          this._dialog.say(`Running '${name}'`);
-          const progress = job.execute()
-            .then(out => {
-              this._logger.log(`['${name} output]`, out);
-              return out;
-            })
-            .catch(err => {
-              this._logger.error(`[${name} error]`, err);
-              return Promise.reject(err);
-            });
-          return {
-            asynchronous: true,
-            progress,
-            description: `${name} action running`
-          };
-        } else {
-          this._dialog.report(`Task ${name} does not exist`);
-          return null;
-        }
+        return {
+          asynchronous: true,
+          progress,
+          description: `${name} action running`
+        };
       }
     );
 	}

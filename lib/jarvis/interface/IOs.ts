@@ -49,22 +49,6 @@ interface IO {
 	report(message: string): void;
 }
 
-const IoCompletions = (function(): () => string[] {
-	let values: string[];
-	return function(): string[] {
-		if (values === undefined) {
-			values = _.flatten([
-				['quit', 'exit', 'record \'', 'record "'],
-				_(ExecJob.tasks()).keys()
-					.map(cmd => [`run '${cmd}'`, `clear '${cmd}'`])
-					.flatten()
-					.value()
-			]);
-		}
-		return values;
-	};
-})();
-
 class AIO implements IO {
 	private _intf: any;
 	private _questionStack: any;
@@ -79,10 +63,6 @@ class AIO implements IO {
 		});
 		this._intf.setPrompt('>');
 		this._questionStack = [];
-	}
-
-	static completions(): string[] {
-		return IoCompletions();
 	}
 
 	prompt(message, lineFeed = true) {
@@ -128,11 +108,23 @@ class AIO implements IO {
 	 * @param {String} line content to complete
 	 * @returns {String[]} completions
 	 */
-	complete(line: string) {
-		const completions = AIO.completions();
-		const hits = completions.filter(c => c.startsWith(line));
-		// show all completions if none found
-		return [hits.length ? hits : completions, line]
+	complete(line: string, cbk) {
+		Promise.all([
+			Promise.resolve(['quit', 'exit', 'record \'', 'record "']),
+			ExecJob.tasks()
+				.then(values => _(values)
+					.keys()
+					.map(cmd => [`run '${cmd}'`, `clear '${cmd}'`])
+					.flatten()
+					.value()
+				)
+		]).then(_.flatten)
+			.then((completions: string[]) => {
+				const hits = completions.filter(c => c.startsWith(line));
+				// show all completions if none found
+				cbk(null, [hits.length ? hits : completions, line]);
+			})
+			.catch(error => cbk(error));
 	}
 }
 

@@ -1,63 +1,79 @@
-export class Store {
-  private _directory: string;
-  private _resources: Map<String, any>;
+const path = require('path');
+const fs = require('fs');
+const _ = require('lodash');
 
-  constructor() {
-    this._directory = 'tasks';
-    this._resources = new Map<String, any>();
-  }
+import ResourceApi, {MapApi} from './ResourceApi';
+import {JsonFileApi, InMemoryApi} from './StorageApi';
 
-  get(resource: string) {
-    return this.load(resource);
-  }
+type ResourceMapping = Map<string, ResourceApi>;
+class Store {
+  /**
+   * constructor
+   * @param _mapping mapping of resources to a storage file
+   */
+  constructor(private _apis: ResourceMapping) {}
 
-  add(resource: string, name: string, object: any): Store {
-    if (!this._resources.has(resource)) {
-      this.load(resource);
+  get(resource: string): Promise<any> {
+    if (this._apis.has(resource)) {
+      const api = this._apis.get(resource);
+      return api.get();
+    } else {
+      throw new Error(`Cannot get unknown resource ${resource}`);
     }
+  }
 
-    const resources = this._resources.get(resource);
-    if (resource === 'execs') {
-      resources[name] = object;
+  add(resource: string, name: string, object: any): Promise<void> {
+    if (this._apis.has(resource)) {
+      const api = this._apis.get(resource);
+      return api.add(name, object);
     } else {
       throw new Error(`Cannot add resource ${resource}`);
     }
-
-    return this;
   }
 
-  load(resource: string) {
-    if (this._resources.has(resource)) {
-      return this._resources.get(resource);
+  delete(resource: string, name: string): Promise<boolean> {
+    if (this._apis.has(resource)) {
+      const api = this._apis.get(resource);
+      return api.delete(name);
     } else {
-      if (resource === 'execs') {
-        const tasks = require(`${this._directory}/execs.json`);
-        this._resources.set(resource, tasks);
-        return tasks;
-      } else {
-        throw new Error(`Cannot load resource ${resource}`);
-      }
+      throw new Error(`Cannot delete resource ${resource}`);
     }
-  }
-
-  delete(resource: string, name: string): boolean {
-    const resources = this._resources.get(resource);
-    if (resources) {
-      if (resource === 'execs') {
-        Reflect.deleteProperty(resources, name);
-        return true;
-      } else {
-        throw new Error(`Cannot add resource ${resource}`);
-      }
-    } else {
-      return false;
-    }
-  }
-
-  forTests() {
-    this._directory = '../../../spec/fixtures';
-    return this;
   }
 }
 
-export default new Store();
+function buildStore(Storage, cbk: (mapping: ResourceMapping) => void = _.noop): Store {
+  const mapping = new Map();
+  const dataDirectory = 'data';
+
+  mapping.set(
+    'execs',
+    new MapApi(new Storage(
+      path.join(__dirname, '..', '..', '..', dataDirectory, 'execs.json'))
+    )
+  );
+  cbk(mapping);
+
+  return new Store(mapping);
+}
+
+const buildDefaultStore = () => buildStore(JsonFileApi);
+const buildTestStore = (cbk?: (mapping: ResourceMapping) => void) => buildStore(InMemoryApi, cbk);
+
+let defaultStore: Store;
+function getStore() {
+  if (!defaultStore) {
+    defaultStore = buildDefaultStore();
+  }
+  return defaultStore;
+}
+function setStore(store: Store) {
+  defaultStore = store;
+}
+
+export default Store;
+export {
+  buildDefaultStore,
+  buildTestStore,
+  getStore,
+  setStore
+};

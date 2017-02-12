@@ -2,9 +2,12 @@ const _ = require('lodash');
 import {expect} from 'chai';
 
 import ExecJob from './ExecJob';
-import store from '../storage/Store';
+import {setStore, buildTestStore} from '../storage/Store';
 
-store.forTests();
+setStore(buildTestStore(mapping => {
+  const execs = mapping.get('execs');
+  execs.add('test', { cmd: 'echo test' });
+}));
 
 describe('Jarvis::Jobs::ExecJob', function () {
   describe('#execute', function () {
@@ -31,12 +34,14 @@ describe('Jarvis::Jobs::ExecJob', function () {
   });
 
   describe('::tasks', function () {
+    let tasks;
     beforeEach(function () {
-      this.tasks = ExecJob.tasks();
+      return ExecJob.tasks()
+        .then(t => { tasks = t });
     });
 
     it('reads the tasks from the storage', function () {
-      expect(_.keys(this.tasks)).to.include('test');
+      expect(_.keys(tasks)).to.include('test');
     });
 
     // TODO test the structure
@@ -44,13 +49,15 @@ describe('Jarvis::Jobs::ExecJob', function () {
 
   describe('::create', function () {
     it('returns a job if the task exists', function () {
-      const job = ExecJob.create('test');
-      expect(job).to.be.an.instanceof(ExecJob);
+      return ExecJob.create('test').then(job => {
+        expect(job).to.be.an.instanceof(ExecJob);
+      });
     });
 
     it('returns undefined if the task does not exist', function () {
-      const job = ExecJob.create('none');
-      expect(job).to.be.undefined;
+      return ExecJob.create('none').then(job => {
+        expect(job).to.be.undefined;
+      });
     });
   });
 });

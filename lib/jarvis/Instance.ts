@@ -7,7 +7,7 @@ import {RecordRule, ClearRule} from './parser/autoRules';
 import {JobsRule} from './parser/jobRules';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
-import store from './storage/Store'; // FIXME stop using singleton
+import Store, {buildDefaultStore, setStore} from './storage/Store'; // FIXME stop using singleton
 import { IO } from './interface/IOs';
 
 /**
@@ -19,6 +19,7 @@ class Instance extends EventEmitter {
   private _jobMgr: JobManager;
   private _interpreter: Interpreter;
   private _logger: any;
+  private _store: Store;
 
   constructor(io: IO, name: string) {
     super();
@@ -30,13 +31,15 @@ class Instance extends EventEmitter {
       this._dialog.name = name;
     }
     this._jobMgr = new JobManager(this._dialog);
+    this._store = buildDefaultStore();
+    setStore(this._store);
     this._interpreter = new Interpreter();
 
     this._interpreter.rules.push(new RunRule(this._dialog, this._logger));
     this._interpreter.rules.push(new QuitRule(() => this.quit()));
 
-    this._interpreter.rules.push(new RecordRule(this._dialog, store));
-    this._interpreter.rules.push(new ClearRule(store));
+    this._interpreter.rules.push(new RecordRule(this._dialog, this._store));
+    this._interpreter.rules.push(new ClearRule(this._dialog, this._store));
 
     this._interpreter.rules.push(new JobsRule(this._jobMgr));
   }
@@ -64,6 +67,7 @@ class Instance extends EventEmitter {
 
   queryAction() {
     return this._dialog.ask('What to do?\n').then(answer => {
+      // TODO Do nothing if the input is empty
       const result = this._interpreter.interpret(answer);
       if (result) {
         if (result.asynchronous && result.progress) {
