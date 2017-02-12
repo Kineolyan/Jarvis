@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { MockIO } from '../interface/IOs';
 import Dialog from '../interface/Dialog';
 import {RecordRule, ClearRule} from './autoRules';
-import {Store} from '../storage/Store';
+import Store, {buildTestStore} from '../storage/Store';
 
 describe('RecordRule', function() {
 	let rule: RecordRule,
@@ -12,7 +12,7 @@ describe('RecordRule', function() {
 
 	beforeEach(function() {
 		io = new MockIO(true);
-		store = new Store().forTests();
+		store = buildTestStore();
 
 		const dialog = new Dialog(io);
 		rule = new RecordRule(dialog, store);
@@ -44,18 +44,19 @@ describe('RecordRule', function() {
 		});
 
 		it('creates the rule', function() {
-			const tasks = store.get('execs');
-			expect(tasks.action).to.eql({
-				cmd: 'do something',
-				cwd: 'nowhere'
+			return store.get('execs').then(tasks => {
+				expect(tasks.action).to.eql({
+					cmd: 'do something',
+					cwd: 'nowhere'
+				});
 			});
 		});
 
 		it('supports optional path', function() {
 			io.input('do.THE.thing', '');
-			return rule.execute('record "do-thing"')
-				.progress.then(() => {
-					const tasks = store.get('execs');
+			return rule.execute('record "do-thing"').progress
+				.then(() => store.get('execs'))
+				.then(tasks => {
 					expect(tasks['do-thing']).to.eql({ cmd: 'do.THE.thing' });
 				});
 		});
@@ -67,10 +68,12 @@ describe('ClearRule', function() {
 		store: Store;
 
 	beforeEach(function() {
-		store = new Store().forTests();
-		store.add('execs', 'action', { cmd: 'cmd ' });
+		const io = new MockIO(true);
+		const dialog = new Dialog(io);
+		store = buildTestStore();
+		rule = new ClearRule(dialog, store);
 
-		rule = new ClearRule(store);
+		return store.add('execs', 'action', { cmd: 'cmd ' });
 	});
 
 	describe('#match', function() {
@@ -81,12 +84,14 @@ describe('ClearRule', function() {
 
 	describe('#execute', function() {
 		beforeEach(function() {
-			return rule.execute('clear "action"');
+			return rule.execute('clear "action"').progress;
 		});
 
 		it('deletes the task from the store', function() {
-			const tasks = store.get('execs');
-			expect(tasks).not.to.contain.keys(['action']);
+			return store.get('execs')
+				.then(tasks => {
+					expect(tasks).not.to.contain.keys(['action']);
+				});
 		});
 	});
 });

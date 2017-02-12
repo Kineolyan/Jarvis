@@ -1,19 +1,19 @@
-import { JobManager } from './jobs/JobManager';
 const _ = require('lodash');
 import {expect} from 'chai';
 
 import Instance from './Instance';
 import { MockIO } from './interface/IOs';
+import { JobManager } from './jobs/JobManager';
 import Rule from './parser/Rule';
-import store from './storage/Store';
-
-store.forTests();
+import {getStore, setStore, buildTestStore} from './storage/Store';
 
 describe('Jarvis::Instance', function () {
   let io: MockIO;
   let instance: Instance;
 
   beforeEach(function () {
+    setStore(buildTestStore());
+
     io = new MockIO();
     instance = new Instance(io, 'Celia');
     // Silent logger
@@ -149,9 +149,13 @@ describe('Jarvis::Instance', function () {
   describe('default configuration', function () {
     it('has a rule to run programs', function () {
       io.input('run \'jarvis\'');
-      return instance.queryAction().then(() => {
-        expect(io.out).to.include('[Celia]>> Running \'jarvis\'\n');
-      });
+      return getStore().add('execs', 'jarvis', { cmd: 'echo jarvis' })
+        .then(() => instance.queryAction())
+        // Wait for the completion of the asynchronous job
+        .then(() => (<JobManager> (<any> instance)._jobMgr).jobs[0].job)
+        .then(() => {
+          expect(io.out).to.include('[Celia]>> Running \'jarvis\'\n');
+        });
     });
 
     it('has a rule to print jobs', function () {

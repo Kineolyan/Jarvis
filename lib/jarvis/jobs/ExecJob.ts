@@ -1,5 +1,5 @@
 import * as CP from 'child_process';
-import store from '../storage/Store';
+import {getStore} from '../storage/Store';
 
 export interface ExecDefinition {
   cmd: string;
@@ -33,20 +33,16 @@ export class ExecJob {
     });
   }
 
-  static tasks(): {[key: string]: ExecDefinition};
-  static tasks(key: string): ExecDefinition;
-  static tasks(key?: string): any {
-    const values = store.load('execs');
-    return key !== undefined ? values[key] : values;
+  static tasks(): Promise<{[key: string]: ExecDefinition}>;
+  static tasks(key: string): Promise<ExecDefinition>;
+  static tasks(key?: string): Promise<any> {
+    return getStore().get('execs')
+      .then(values => key !== undefined ? values[key] : values);
   }
 
-  static create(name: string): ExecJob {
-    const def = ExecJob.tasks(name);
-    if (def !== undefined) {
-      return new ExecJob(def);
-    } else {
-      return undefined;
-    }
+  static create(name: string): Promise<ExecJob> {
+    return ExecJob.tasks(name)
+      .then(def => def !== undefined ? new ExecJob(def) : undefined);
   }
 }
 
