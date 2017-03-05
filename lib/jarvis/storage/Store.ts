@@ -44,11 +44,20 @@ class Store {
 function buildStore(Storage, cbk: (mapping: ResourceMapping) => void = _.noop): Store {
   const mapping = new Map();
   const dataDirectory = 'data';
+  const dataFilePath = (...args) => path.join(
+    __dirname, '..', '..', '..', dataDirectory, ...args
+  );
 
   mapping.set(
     'execs',
     new MapApi(new Storage(
-      path.join(__dirname, '..', '..', '..', dataDirectory, 'execs.json'))
+      dataFilePath('execs.json')
+    ))
+  );
+  mapping.set(
+    'watches',
+    new MapApi(new Storage(
+      dataFilePath('watches.json'))
     )
   );
   cbk(mapping);

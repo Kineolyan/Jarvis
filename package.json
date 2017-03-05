@@ -27,6 +27,7 @@
   "homepage": "https://github.com/Kineolyan/Jarvis#readme",
   "dependencies": {
     "chai": "^3.5.0",
+    "chokidar": "^1.6.1",
     "del-cli": "^0.2.0",
     "gulp": "^3.9.1",
     "gulp-mocha": "^2.2.0",
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
+    "@types/chokidar": "^1.4.31",
     "@types/jest": "^16.0.4",
     "@types/lodash": "4.14.50",
     "@types/node": "^6.0.45",
