@@ -11,7 +11,8 @@
 /dist/
 
 ## Project files
-data/execs.json
+data/*
+!data/*.sample.json
 bin/test
 
 node_modules/
