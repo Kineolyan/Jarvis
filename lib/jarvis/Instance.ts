@@ -1,6 +1,7 @@
 import {EventEmitter} from 'events';
 
 import Dialog from './interface/Dialog';
+import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
 import {RunRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
@@ -18,7 +19,7 @@ class Instance extends EventEmitter {
   private _dialog: Dialog;
   private _jobMgr: JobManager;
   private _interpreter: Interpreter;
-  private _logger: any;
+  private _logger: Logger;
   private _store: Store;
 
   constructor(io: IO, name: string) {
