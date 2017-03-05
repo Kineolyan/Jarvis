@@ -1,15 +1,16 @@
 import * as CP from 'child_process';
 import {getStore} from '../storage/Store';
+import Job from './Job';
 
 export interface ExecDefinition {
   cmd: string;
   cwd?: string;
 }
 
-export class ExecJob {
+export class ExecJob implements Job<string> {
   constructor(private _def: ExecDefinition) {}
 
-  execute(): Promise<any> {
+  execute(): Promise<string> {
     const options: any = {};
     if (this._def.cwd !== undefined) {
       options.cwd = this._def.cwd;
@@ -31,6 +32,11 @@ export class ExecJob {
         reject(err);
       }
     });
+  }
+
+  stop(): boolean {
+    // TODO stop the child process, with a signal
+    throw new Error('Operation not implemented');
   }
 
   static tasks(): Promise<{[key: string]: ExecDefinition}>;

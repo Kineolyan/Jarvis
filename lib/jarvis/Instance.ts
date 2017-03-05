@@ -3,7 +3,7 @@ import {EventEmitter} from 'events';
 import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
-import {RunRule, QuitRule} from './parser/basicRules';
+import {RunRule, WatchRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
 import {JobsRule} from './parser/jobRules';
 import JobManager from './jobs/JobManager';
@@ -43,6 +43,9 @@ class Instance extends EventEmitter {
     this._interpreter.rules.push(new ClearRule(this._dialog, this._store));
 
     this._interpreter.rules.push(new JobsRule(this._jobMgr));
+    this._interpreter.rules.push(new WatchRule(
+      this._dialog, this._store, this._logger
+    ));
   }
 
   get running() {

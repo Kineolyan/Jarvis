@@ -1,0 +1,12 @@
+{
+	"hello": {
+		"files": "/home/oliv/tmp/jarvis",
+		"cmd": {
+			"cmd": "echo 'new temp file'"
+		}
+	},
+	"hello-file": {
+		"files": "/home/oliv/tmp/jarvis/test",
+		"job": "hello-world"
+	}
+}
