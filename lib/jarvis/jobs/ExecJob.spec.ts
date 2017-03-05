@@ -6,7 +6,11 @@ import {setStore, buildTestStore} from '../storage/Store';
 
 setStore(buildTestStore(mapping => {
   const execs = mapping.get('execs');
-  execs.add('test', { cmd: 'echo test' });
+  if (execs) {
+    execs.add('test', { cmd: 'echo test' });
+  } else {
+    throw new Error('execs mapping not configued yet');
+  }
 }));
 
 describe('Jarvis::Jobs::ExecJob', function () {

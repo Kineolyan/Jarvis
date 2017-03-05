@@ -9,7 +9,7 @@ interface ResourceApi {
 }
 
 class MapApi implements ResourceApi {
-  private _cache: Promise<Object>;
+  private _cache: Promise<Object> | null;
 
   constructor(private _store: StorageApi<Object>) {
     this._cache = null;

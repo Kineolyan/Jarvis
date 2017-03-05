@@ -15,7 +15,7 @@ export class Interpreter {
    * @param message - message to Interpreter
    * @return result of the operation, or false if unknown
    */
-  interpret(message: string): RuleResult {
+  interpret(message: string): RuleResult | null {
     for (let rule of this._rules) {
       if (rule.match(message)) {
         return rule.execute(message);

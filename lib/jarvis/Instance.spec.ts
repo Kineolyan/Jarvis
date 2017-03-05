@@ -87,7 +87,7 @@ describe('Jarvis::Instance', function () {
         (<any> instance)._interpreter.rules.push(new Rule(
           /(\d)/, () => {
             this.count += 1;
-            return { asynchronous: false, progress: null };
+            return { asynchronous: false };
           }
         ));
         io.input('1', '2', 'nothing', 'quit');
@@ -128,7 +128,7 @@ describe('Jarvis::Instance', function () {
         new Promise(r => { lastQuestionResolver = r; })
       );
 
-      const resolvers = [];
+      const resolvers: Function[] = [];
       (<any> instance)._interpreter.rules.push(new Rule(
         /^exec/, () => {
           const progress = new Promise<void>(r => {

@@ -9,12 +9,16 @@ import Logger from '../interface/Logger';
 
 setStore(buildTestStore(mapping => {
   const execs = mapping.get('watches');
-  execs.add('test', {
-		files: '/tmp/jarvis-test.txt',
-		cmd: {
-			cmd: 'echo test'
-		}
-	});
+	if (execs) {
+		execs.add('test', {
+			files: '/tmp/jarvis-test.txt',
+			cmd: {
+				cmd: 'echo test'
+			}
+		});
+	} else {
+		throw new Error('watches mapping not configured');
+	}
 }));
 
 const noopLogger: Logger = {

@@ -29,31 +29,25 @@
     "chai": "^3.5.0",
     "chokidar": "^1.6.1",
     "del-cli": "^0.2.0",
-    "gulp": "^3.9.1",
-    "gulp-mocha": "^2.2.0",
-    "gulp-tsb": "^1.10.4",
-    "gulp-typescript": "^2.13.4",
     "lodash": "^4.11.2",
-    "mocha": "^2.4.5",
-    "typescript": "2.0.3"
+    "mocha": "^3.2.0",
+    "typescript": "^2.2.1"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
     "@types/chokidar": "^1.4.31",
-    "@types/jest": "^16.0.4",
-    "@types/lodash": "4.14.50",
-    "@types/node": "^6.0.45",
-    "gulp-eslint": "^2.0.0",
-    "jest": "^18.1.0"
+    "@types/jest": "^18.1.1",
+    "@types/lodash": "^4.14.54",
+    "@types/node": "^7.0.5",
+    "jest": "^19.0.2"
   },
   "jest": {
     "moduleFileExtensions": [
       "ts",
       "js"
     ],
-    "testPathDirs": [
-      "<rootDir>/src",
-      "<rootDir>/dist"
+    "roots": [
+      "<rootDir>"
     ],
     "transform": {
       "^.+\\.(ts|tsx)$": "<rootDir>/spec/preprocessor.js"

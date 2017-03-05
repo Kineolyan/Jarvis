@@ -57,7 +57,7 @@ const LISTEN_EVENTS = [
 ];
 class WatchJob implements Job<any> {
 	private _watcher: any; // FIXME should be FSWatcher
-	private _resolver: (result?: any) => void;
+	private _resolver: ((result?: {} | PromiseLike<{}>) => void) | null;
 	private _logger: Logger;
 	private _debounceTime: number;
 

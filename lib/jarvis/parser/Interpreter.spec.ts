@@ -26,7 +26,7 @@ describe('Jarvis::Parser::Interpreter', function () {
             this.list.push(pattern);
             return {
               asynchronous: i % 2 === 0,
-              progress: Promise.resolve(pattern)
+              progress: Promise.resolve()
             };
         }));
       });
@@ -43,9 +43,6 @@ describe('Jarvis::Parser::Interpreter', function () {
 
       it('returns true since at least one rule matches', function () {
         expect(this.result.asynchronous).to.eql(false);
-        return this.result.progress.then(value => {
-          expect(value).to.eql('b');
-        });
       });
     });
 
@@ -65,16 +62,11 @@ describe('Jarvis::Parser::Interpreter', function () {
 
     describe('with many matching rules', function () {
       beforeEach(function () {
-        return this.interpreter.interpret('a')
-          .progress.then(value => this.result = value);
+        return this.interpreter.interpret('a').progress;
       });
 
       it('executes the first matching rule', function () {
         expect(this.list).to.eql(['a']);
-      });
-
-      it('returns the correct result', function () {
-        expect(this.result).to.eql('a');
       });
     });
   });

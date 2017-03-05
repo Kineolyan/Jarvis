@@ -43,7 +43,7 @@ export class JobManager {
   }
 
   printJobs(): void {
-    const jobList = [];
+    const jobList: string[] = [];
     this._jobs.forEach((record, key) => {
       jobList.push(` * ${record.description || `#${key}`} (since ${time.getTime(record.startTime)})`);
     });

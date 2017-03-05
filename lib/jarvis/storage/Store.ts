@@ -14,8 +14,8 @@ class Store {
   constructor(private _apis: ResourceMapping) {}
 
   get(resource: string): Promise<any> {
-    if (this._apis.has(resource)) {
-      const api = this._apis.get(resource);
+    const api = this._apis.get(resource);
+    if (api) {
       return api.get();
     } else {
       throw new Error(`Cannot get unknown resource ${resource}`);
@@ -23,8 +23,8 @@ class Store {
   }
 
   add(resource: string, name: string, object: any): Promise<void> {
-    if (this._apis.has(resource)) {
-      const api = this._apis.get(resource);
+    const api = this._apis.get(resource);
+    if (api) {
       return api.add(name, object);
     } else {
       throw new Error(`Cannot add resource ${resource}`);
@@ -32,8 +32,8 @@ class Store {
   }
 
   delete(resource: string, name: string): Promise<boolean> {
-    if (this._apis.has(resource)) {
-      const api = this._apis.get(resource);
+    const api = this._apis.get(resource);
+    if (api) {
       return api.delete(name);
     } else {
       throw new Error(`Cannot delete resource ${resource}`);

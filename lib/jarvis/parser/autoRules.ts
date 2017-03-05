@@ -13,7 +13,7 @@ class RecordRule extends Rule {
 			/^record (?:'(.+?)'|"(.+?)")/,
 			args => {
 				const name = args[1] || args[2];
-				let newCmd: ExecDefinition = null;
+				let newCmd: ExecDefinition;
 
 				const progress = this._dialog.ask('Command to execute: ')
 					.then(cmd => {

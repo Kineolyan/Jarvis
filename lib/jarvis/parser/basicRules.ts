@@ -63,7 +63,6 @@ class WatchRule extends Rule {
             });
         } else {
           this._dialog.report(`Watch task ${name} does not exist`);
-          return <void> null;
         }
       });
 

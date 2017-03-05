@@ -6,15 +6,16 @@
         "outDir": "./dist",
         "removeComments": false,
         "rootDir": "./lib",
+        "strictNullChecks": true,
         "target": "es6"
     },
     "include": [
         "./lib/**/*.ts"
     ],
     "exclude": [
-        "./node_modules"
+        "./node_modules",
+        "**/*.spec.ts"
     ],
-    "files": [],
     "atom": {
         "rewriteTsconfig": false,
         "compileOnSave": false

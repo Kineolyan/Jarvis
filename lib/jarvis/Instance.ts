@@ -92,8 +92,7 @@ class Instance extends EventEmitter {
     this._dialog.say('Good bye Sir');
     this.emit('close');
     return {
-      asynchronous: false,
-      progress: null
+      asynchronous: false
     };
   }
 }
