@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { MockIO } from '../interface/IOs';
 import Dialog from '../interface/Dialog';
+import { RuleResult } from './Rule';
 import {RecordRule, ClearRule} from './autoRules';
 import Store, {buildTestStore} from '../storage/Store';
 
@@ -25,14 +26,16 @@ describe('RecordRule', function() {
 	});
 
 	describe('#execute', function() {
+		let result: RuleResult;
+
 		beforeEach(function() {
 			io.input('do something', 'nowhere');
-			this.result = rule.execute('record "action"');
-			return this.result.progress;
+			result = rule.execute('record "action"');
+			return result.progress.toPromise();
 		});
 
 		it('creates a synchronous result', function() {
-			expect(this.result.asynchronous).to.eql(false);
+			expect(result.asynchronous).to.eql(false);
 		});
 
 		it('asks for the command', function() {
@@ -55,6 +58,7 @@ describe('RecordRule', function() {
 		it('supports optional path', function() {
 			io.input('do.THE.thing', '');
 			return rule.execute('record "do-thing"').progress
+				.toPromise()
 				.then(() => store.get('execs'))
 				.then(tasks => {
 					expect(tasks['do-thing']).to.eql({ cmd: 'do.THE.thing' });

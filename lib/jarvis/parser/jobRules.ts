@@ -1,8 +1,9 @@
-const _ = require('lodash');
+import * as _ from 'lodash';
 
 import Rule, {RuleAction} from './Rule';
 import Dialog from '../interface/Dialog';
 import JobManager from './../jobs/JobManager';
+import Process from '../system/Process';
 
 class JobsRule extends Rule {
 	constructor(private _jobMgr: JobManager) {
@@ -11,7 +12,10 @@ class JobsRule extends Rule {
 			args => {
 				const now = new Date();
 				this._jobMgr.printJobs();
-				return { asynchronous: false, progress: Promise.resolve() };
+				return {
+					asynchronous: false,
+					progress: Process.success()
+				};
 			}
 		)
 	}

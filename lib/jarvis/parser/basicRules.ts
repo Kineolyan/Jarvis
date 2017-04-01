@@ -1,9 +1,12 @@
+import { Observable } from 'rxjs';
+
 import Rule, {RuleAction, RuleResult} from './Rule';
 import Dialog from '../interface/Dialog';
 import Logger from '../interface/Logger';
 import ExecJob from '../jobs/ExecJob';
 import WatchJob, {CmdWatchDefinition} from '../jobs/WatchJob';
 import Store from '../storage/Store';
+import Process from '../system/Process';
 
 class RunRule extends Rule {
 	constructor(private _dialog: Dialog, private _logger: Logger) {
@@ -15,27 +18,21 @@ class RunRule extends Rule {
 
   runJob(args: any): RuleResult {
     const name = args[1];
-    const progress = ExecJob.create(name)
-      .then(job => {
+    const progress = Observable.fromPromise(ExecJob.create(name))
+      .flatMap(job => {
         if (job !== undefined) {
           this._dialog.say(`Running '${name}'`);
-          return job.execute()
-            .then(out => {
-              this._logger.log(`['${name} output]`, out);
-            })
-            .catch(err => {
-              this._logger.error(`[${name} error]`, err);
-              return Promise.reject(err);
-            });
+          return job.execute();
         } else {
           this._dialog.report(`Task ${name} does not exist`);
+          return Process.error();
         }
       });
 
     return {
       asynchronous: true,
       progress,
-      description: `${name} action running`
+      description: `${name} action`
     };
   }
 }
@@ -50,26 +47,22 @@ class WatchRule extends Rule {
 
   runJob(args): RuleResult {
     const name = args[1];
-    const progress = this.resolveDefinition(name)
-      .then(watchDefinition => {
+    const progress = Observable.fromPromise(this.resolveDefinition(name))
+      .flatMap(watchDefinition => {
         if (watchDefinition !== null) {
           this._dialog.say(`Watching '${name}'`);
-          const watch = new WatchJob(watchDefinition, {logger: this._logger});
-          return watch.execute()
-            .then(() => {  /* Nothing to do, swallow the result*/ })
-            .catch(err => {
-              this._logger.error(`[${name} error]`, err);
-              return Promise.reject(err);
-            });
+          const watch = new WatchJob(watchDefinition, {});
+          return watch.execute();
         } else {
           this._dialog.report(`Watch task ${name} does not exist`);
+          return Process.error();
         }
       });
 
     return {
       asynchronous: true,
       progress,
-      description: `${name} action watching`
+      description: `${name} watch`
     };
   }
 

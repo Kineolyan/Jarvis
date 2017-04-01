@@ -1,7 +1,9 @@
 import * as _ from 'lodash';
 import {expect} from 'chai';
 import * as fs from 'fs';
+import {Observable, Subject, Subscriber} from 'rxjs';
 
+import {isOutput} from '../system/Process';
 import WatchJob, {WatchExecutor} from './WatchJob';
 import ExecJob from './ExecJob';
 import {setStore, buildTestStore} from '../storage/Store';
@@ -21,11 +23,6 @@ setStore(buildTestStore(mapping => {
 	}
 }));
 
-const noopLogger: Logger = {
-	log: _.noop,
-	error: _.noop
-};
-
 describe('Jarvis::Jobs::WatchExecutor', () => {
 	describe('#run', () => {
 		let job;
@@ -33,67 +30,62 @@ describe('Jarvis::Jobs::WatchExecutor', () => {
 
 		beforeEach(() => {
 			job = {
-				stack: [],
-				resolve(i) {
-					const call = this.stack[i];
-					if (_.isFunction(call)) {
-						call();
-					} else {
-						throw new Error(`Call ${i} is not a resolver`);
-					}
-				},
+				observers: [],
 				execute() {
-					/* Records the call execution and optionally resolves the listener */
-					const execution = new Promise(resolve => this.stack.push(resolve));
-					if (this._resolve) {
-						this._resolve();
-					}
-
-					return Promise.resolve();
+					return this.observable;
 				},
-				stop() {
-					if (this._reject) {
-						this._reject(new Error('Unexpected stoppage of the job'));
+				stop() { /* Nothing to do for tests so far */ },
+				onObserver(subIdx: number, action: (s: Subscriber<any>) => void) {
+					const s = this.observers[subIdx];
+					if (s !== undefined) {
+						action(s);
+					} else {
+						throw new Error(`No observers at ${subIdx}, try in [0, ${this.observers.length})`);
 					}
-				},
-				waitForExecution(nb) {
-					return new Promise((resolve, reject) => {
-						this._resolve = () => {
-							if (this.stack.length >= nb) {
-								resolve();
-							}
-					 	};
-						this._reject = reject;
-
-						this._resolve();
-					});
 				}
 			};
-			executor = new WatchExecutor(job, noopLogger);
+			job.observable = Observable.create((observer) => {
+				job.observers.push(observer);
+
+				// return () => {
+				// 	const i = job.observers.indexOf(observer);
+				// 	if (i >= 0) {
+				// 		job.observers.splice(i, 1);
+				// 	}
+				// }
+			});
+			executor = new WatchExecutor(job);
 		});
 
 		it('runs the given job', () => {
 			executor.run();
 
-			job.resolve(0);
-			return job.waitForExecution(1);
+			expect(job.observers).to.have.length(1);
+
+			job.onObserver(0, subscriber => {
+				subscriber.next({code: 0});
+				subscriber.complete();
+			});
 		});
 
 		it('stacks calls until the previous completed', () => {
 			executor.run();
 			executor.run();
 
-			expect(job.stack).to.have.length(1, 'Only one call');
+			expect(job.observers).to.have.length(1);
 		});
 
 		it('restarts job if any request was made during the execution', () => {
 			executor.run();
 			executor.run();
 
-			expect(job.stack).to.have.length(1, 'Only one call');
-			job.resolve(0);
+			expect(job.observers).to.have.length(1);
+			job.onObserver(0, subscriber => {
+				subscriber.next({code: 0});
+				subscriber.complete();
+			});
 
-			return job.waitForExecution(2);
+			expect(job.observers).to.have.length(2);
 		});
 
 		it('only restarts once even if many executions were requested during progress', () => {
@@ -103,30 +95,39 @@ describe('Jarvis::Jobs::WatchExecutor', () => {
 			executor.run();
 			executor.run();
 
-			job.resolve(0);
-			return job.waitForExecution(2)
-				.then(() => {
-					job.resolve(1);
-
-					executor.run();
-					job.waitForExecution(3);
-				});
+			job.onObserver(0, subscriber => {
+				subscriber.next({code: 0});
+				subscriber.complete();
+			});
+			job.onObserver(1, subscriber => {
+				subscriber.next({code: 1});
+				subscriber.complete();
+			});
+			expect(job.observers).to.have.length(2);
+			// No 3rd execution started even after 5 calls to run
 		});
 	});
 });
 
 describe('Jarvis::Jobs::WatchJob', () => {
 	const watchedFilePath = `/tmp/jarvis-${Date.now()}`;
-	let logWatcher;
 	let job: WatchJob;
 
-	beforeAll(done => {
+	beforeAll(() => {
 		// Ensure the file exists
-		fs.writeFile(watchedFilePath, 'init', done);
+		return new Promise((resolve, reject) => {
+			try {
+				fs.writeFile(watchedFilePath, 'init', err => {
+					err ? reject(err): resolve();
+				});
+			} catch (err) {
+				reject(err);
+			}
+		});
 	});
 
 	beforeEach(() => {
-		logWatcher = {
+		const logWatcher = {
 			output: [],
 			log(...args) {
 				this.output.push(args);
@@ -161,15 +162,13 @@ describe('Jarvis::Jobs::WatchJob', () => {
 					cmd: 'echo "job executed"'
 				}
 			},
-			{logger: logWatcher, debounceTime: 50}
+			{debounceTime: 50}
 		);
 	});
 
 	describe('#execute', () => {
 		let timerId, updateFile;
 		beforeEach(() => {
-			job.execute();
-
 			let i = 0;
 			updateFile = () => {
 				timerId = setTimeout(
@@ -190,9 +189,19 @@ describe('Jarvis::Jobs::WatchJob', () => {
 
 		it('executes the cmd on file changes', () => {
 			updateFile();
-			return logWatcher.waitForOutput(1)
-				.then(() => {
-					expect(logWatcher.output[0][1]).to.eql('job executed\n');
+			return job.execute()
+				.filter(isOutput)
+				.take(2)
+				.reduce(
+					(msgs: string[], msg) => {
+						msgs.push(msg.data);
+						return msgs;
+					},
+					[]
+				)
+				.toPromise()
+				.then(msgs => {
+					expect(msgs).to.contain('[watch] job executed\n');
 				});
 		});
 	});

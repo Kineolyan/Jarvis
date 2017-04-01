@@ -1,5 +1,8 @@
-interface Job<T> {
-	execute(): Promise<T>;
+import {Observable} from 'rxjs';
+import {ProcessMsg} from '../system/Process';
+
+interface Job {
+	execute(): Observable<ProcessMsg>;
 	stop(): boolean;
 }
 

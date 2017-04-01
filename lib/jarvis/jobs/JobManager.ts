@@ -1,10 +1,16 @@
+import { Observable } from 'rxjs';
+
 import Dialog from '../interface/Dialog';
 import * as time from '../interface/time';
+import {isOutput, isCompletion} from '../system/Process';
 
 interface JobRecord {
-  job: Promise<any>,
   description?: string,
-  startTime: number
+  startTime: number,
+  code: number | undefined,
+  error?: Error,
+  logs: string[],
+  completion: Promise<JobRecord>
 }
 
 export class JobManager {
@@ -20,33 +26,64 @@ export class JobManager {
     return Array.from(this._jobs.values());
   }
 
+  getJob(jobId: number): JobRecord | undefined {
+    return this._jobs.get(jobId);
+  }
+
   /**
    * Registers a job that will complete in a future.
    * @param job progress of the job
    * @param description description of the job
-   * @return promise on the job completion
    */
-  registerJob<T>(job: Promise<T>, description?: string): Promise<T> {
+  registerJob(job: Observable<any>, description?: string): number {
     const jobId = ++this._jobId;
-    this._jobs.set(jobId, {
-      job,
+    const record: JobRecord = {
+      logs: [],
+      code: undefined,
       description: description,
-      startTime: Date.now()
-    });
+      startTime: Date.now(),
+      completion: new Promise<JobRecord>(resolve => {
+        job.delay(10) // Delay to let time for the record to be registered
+          .subscribe({
+            next(msg) {
+              if (isOutput(msg)) {
+                record.logs.push(msg.data);
+              } else if (isCompletion(msg)) {
+                record.code = msg.code;
+              }
+            },
+            error(err) {
+              record.code = -1;
+              record.error = err;
+              resolve(record);
+            },
+            complete() {
+              resolve(record);
+            }
+          });
+      })
+      .then(record => {
+        if (record.code === 0) {
+          this._dialog.say(`Task ${jobId} completed`);
+        } else {
+          this._dialog.report(`Task ${jobId} failed with code ${record.code}`);
+        }
 
-    return job.then(result => {
-      this._jobs.delete(jobId);
-      this._dialog.say(`Task ${jobId} completed`);
+        return record;
+      })
+    };
+    this._jobs.set(jobId, record);
 
-      return result;
-    });
+    return jobId;
   }
 
   printJobs(): void {
     const jobList: string[] = [];
     this._jobs.forEach((record, key) => {
-      jobList.push(` * ${record.description || `#${key}`} (since ${time.getTime(record.startTime)})`);
-    });
+        if (record.code === undefined) {
+          jobList.push(` * ${record.description || `#${key}`} (since ${time.getTime(record.startTime)})`);
+        }
+      });
 
     const now = new Date();
     const message = `Jobs at ${time.getTime(now)}
@@ -55,6 +92,19 @@ ${jobList.length > 0 ? jobList.join('\n') : '-- No jobs registered'}`
     this._dialog.say(message);
   }
 }
+
+/*
+
+          .reduce((acc: {output: string, code?: number}, msg) => {
+            if (isOutput(msg)) {
+              acc.output += msg.data;
+            } else if (isCompletion(msg)) {
+              acc.code = msg.code;
+            }
+
+            return acc;
+          }, {output: ''})
+*/
 
 export default JobManager;
 export {

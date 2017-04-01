@@ -1,3 +1,4 @@
+import { Observable, Subject } from 'rxjs';
 import { EventEmitter } from 'events';
 import * as chokidar from 'chokidar';
 import * as _ from 'lodash';
@@ -5,6 +6,7 @@ import * as _ from 'lodash';
 import ExecJob, {ExecDefinition} from './ExecJob';
 import Job from './Job';
 import Logger from '../interface/Logger';
+import {ProcessMsg, isOutput, isCompletion} from '../system/Process';
 
 interface CmdWatchDefinition {
 	kind: 'cmd';
@@ -17,33 +19,52 @@ interface JobWatchDefinition {
 	job: string
 }
 type WatchDefinition = CmdWatchDefinition | JobWatchDefinition;
-type SystemJob = Job<string>;
 
 class WatchExecutor {
 	private _runningJob: boolean;
 	private _pendingExecution: boolean;
+	private _subject: Subject<ProcessMsg>;
 
-	constructor(private _job: SystemJob, private _logger: Logger) {}
+	constructor(private _job: Job) {
+		this._subject = new Subject();
+	}
+
+	get subject() {
+		return this._subject;
+	}
 
 	run(): void {
 		if (!this._runningJob) {
 			this._runningJob = true;
 			this._job.execute()
-				.catch(output => {
-					/* No handling so far, just turning into a success */
-					this._logger.log('[watch]', output);
+				.subscribe({
+					next: (msg) => {
+						if (isOutput(msg)) {
+							this._subject.next({
+								data: `[watch] ${msg.data}`,
+								source: msg.source
+							});
+						} else if (isCompletion(msg)) {
+							this._subject.next({
+								data: `[watch] completed with ${msg.code === 0 ? 'success' : 'failure'}`,
+								source: 'out'
+							});
+						}
+					},
+					error: (err) => this.endRun(),
+					complete: () => this.endRun()
 				})
-				.then(output => {
-					this._logger.log('[watch]', output);
-					this._runningJob = false;
-
-					if (this._pendingExecution) {
-						this._pendingExecution = false;
-						this.run();
-					}
-				});
 		} else {
 			this._pendingExecution = true;
+		}
+	}
+
+	private endRun() {
+		this._runningJob = false;
+
+		if (this._pendingExecution) {
+			this._pendingExecution = false;
+			this.run();
 		}
 	}
 }
@@ -55,34 +76,29 @@ const LISTEN_EVENTS = [
   'addDir',
   'unlinkDir'
 ];
-class WatchJob implements Job<any> {
+class WatchJob implements Job {
 	private _watcher: any; // FIXME should be FSWatcher
-	private _resolver: ((result?: {} | PromiseLike<{}>) => void) | null;
-	private _logger: Logger;
+	private _runner?: WatchExecutor;
 	private _debounceTime: number;
 
   constructor(
 			private _def: WatchDefinition,
 			options: {
-				logger: Logger,
 				debounceTime?: number
 			}
 		) {
-		this._logger = options.logger;
 		this._debounceTime = options.debounceTime || 250;
 	}
 
-	execute(): Promise<any> {
+	execute() {
 		if (this._watcher) {
 			throw new Error('Already started');
 		}
 
-		return new Promise((resolve, reject) => {
-			this._resolver = resolve;
-
-			this.createAction()
-				.then(job => {
-					const runner = new WatchExecutor(job, this._logger);
+		return Observable.fromPromise(this.createAction())
+			.flatMap(job => {
+				if (this._runner === undefined) {
+					const runner = this._runner = new WatchExecutor(job);
 					// FIXME how to stop the runner
 					const cbk = _.debounce(path => runner.run(), this._debounceTime);
 					this._watcher = chokidar.watch(this._def.files, {
@@ -96,28 +112,19 @@ class WatchJob implements Job<any> {
 						LISTEN_EVENTS.forEach(eventName => this._watcher.on(eventName, cbk));
 					});
 
-					// this._watcher.on('all', (...args) => console.log('chokidar', args));
-				})
-				.catch(err => {
-					this._resolver = null;
-					this._watcher = null;
-					reject(err);
-				});
-		});
+					return runner.subject;
+				} else {
+					return this._runner.subject;
+				}
+			});
 	}
 
-	stop(): boolean {
-		if (this._resolver) {
-			if (this._watcher) {
-				this._watcher.close();
-			}
-			this._resolver();
-
-			this._resolver = null;
-			this._watcher = null;
+	stop() {
+		if (this._watcher) {
+			this._watcher.close();
 			return true;
 		}	else {
-			throw new Error(`Never started`);
+			return false;
 		}
 	}
 

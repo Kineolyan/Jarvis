@@ -1,6 +1,9 @@
+import {Observable} from 'rxjs';
+import {ProcessMsg} from '../system/Process';
+
 export interface RuleResult {
   asynchronous: boolean,
-  progress?: Promise<void>,
+  progress?: Observable<ProcessMsg>,
   description?: string
 }
 

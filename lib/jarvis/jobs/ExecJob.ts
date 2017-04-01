@@ -1,4 +1,6 @@
-import * as CP from 'child_process';
+import { Observable } from 'rxjs';
+
+import Process from '../system/Process';
 import {getStore} from '../storage/Store';
 import Job from './Job';
 
@@ -7,36 +9,27 @@ export interface ExecDefinition {
   cwd?: string;
 }
 
-export class ExecJob implements Job<string> {
+export class ExecJob implements Job {
+  private _unsubscriber: any;
   constructor(private _def: ExecDefinition) {}
 
-  execute(): Promise<string> {
+  execute() {
     const options: any = {};
     if (this._def.cwd !== undefined) {
       options.cwd = this._def.cwd;
     }
 
-    return new Promise((resolve, reject) => {
-      try {
-        CP.exec(this._def.cmd, options, (error, stdout/* , stderr */) => {
-          // console.log(`stdout: ${stdout}`);
-          // console.log(`stderr: ${stderr}`);
-          if (error === null) {
-            resolve(stdout);
-          } else {
-            // console.log(`exec error: ${error}`);
-            reject(error);
-          }
-        });
-      } catch (err) {
-        reject(err);
-      }
-    });
+    return Process.execute(this._def.cmd, [], options);
   }
 
-  stop(): boolean {
-    // TODO stop the child process, with a signal
-    throw new Error('Operation not implemented');
+  stop() {
+    if (this._unsubscriber) {
+      this._unsubscriber();
+      this._unsubscriber = null;
+      return true;
+    } else {
+      return false;
+    }
   }
 
   static tasks(): Promise<{[key: string]: ExecDefinition}>;
