@@ -1,9 +1,11 @@
-const _ = require('lodash');
+import {Observable} from 'rxjs';
+import * as _ from 'lodash';
 
 import Rule, {RuleAction} from './Rule';
 import Dialog from '../interface/Dialog';
 import Store from '../storage/Store';
 import {ExecDefinition} from '../jobs/ExecJob';
+import Process from '../system/Process';
 
 const EXEC_STORE = 'execs';
 
@@ -19,12 +21,17 @@ class RecordRule extends Rule {
 					.then(cmd => {
 						newCmd = {cmd};
 						return this._dialog.ask('Pwd for command (opt.): ');
-					}).then(pwd => {
+					})
+					.then(pwd => {
 						if (!_.isEmpty(pwd)) {
 							newCmd.cwd = pwd;
 						}
-					}).then(() => this._store.add(EXEC_STORE, name, newCmd));
-				return { asynchronous: false, progress };
+					})
+					.then(() => this._store.add(EXEC_STORE, name, newCmd));
+				return {
+					asynchronous: false,
+					progress: Process.fromPromise(progress)
+				};
 			}
 		)
 	}
@@ -42,7 +49,10 @@ class ClearRule extends Rule {
 							this._dialog.report(`Tried to delete unknown rule |${name}|`);
 						}
 					});
-				return { asynchronous: false, progress };
+				return {
+					asynchronous: false,
+					progress: Process.fromPromise(progress)
+				};
 			}
 		)
 	}

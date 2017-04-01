@@ -1,5 +1,6 @@
-const _ = require('lodash');
+import * as _ from 'lodash';
 import {expect} from 'chai';
+import {Observable, Observer} from 'rxjs';
 
 import Instance from './Instance';
 import { MockIO } from './interface/IOs';
@@ -7,11 +8,11 @@ import { JobManager } from './jobs/JobManager';
 import Rule from './parser/Rule';
 import {getStore, setStore, buildTestStore} from './storage/Store';
 
-describe('Jarvis::Instance', function () {
+describe('Jarvis::Instance', () => {
   let io: MockIO;
   let instance: Instance;
 
-  beforeEach(function () {
+  beforeEach(() => {
     setStore(buildTestStore());
 
     io = new MockIO();
@@ -20,101 +21,165 @@ describe('Jarvis::Instance', function () {
     (<any> instance)._logger = {log: _.noop, error: _.noop};
   });
 
-  describe('#constructor', function () {
-    it('is not running', function () {
+  describe('#constructor', () => {
+    it('is not running', () => {
       expect(instance.running).to.be.false;
     });
   });
 
-  describe('#queryAction', function () {
-    it('asks to do something', function () {
+  describe('#queryAction', () => {
+    it('asks to do something', () => {
       io.input('not important');
       instance.queryAction();
       expect(io.out).to.eql(['[Celia]>> What to do?\n']);
     });
 
-    it('interprets the answer', function () {
+    it('interprets the answer', () => {
       io.input('exit');
-      return instance.queryAction().then(() => {
-        expect(io.inputs).to.be.empty;
-      });
+      return instance.queryAction()
+        .toPromise()
+        .then(() => {
+          expect(io.inputs).to.be.empty;
+        });
     });
 
-    it('notifies if it cannot interpret', function () {
+    it('notifies if it cannot interpret', () => {
       io.input('hello world');
-      return instance.queryAction().then(() => {
-        expect(io.err).to.eql(['[Celia]!! Unknown action\n']);
-      });
+      return instance.queryAction()
+        .toPromise()
+        .then(() => {
+          expect(io.err).to.eql(['[Celia]!! Unknown action\n']);
+        });
     });
 
-    describe('with Promise returned by command', function() {
+    describe('when matching an sync rule', () => {
       let jobMgr: JobManager;
+      let observer: Observable<any>;
+      let result: Observable<{}>;
 
-      beforeEach(function () {
+      beforeEach(() => {
         jobMgr = (<any> instance)._jobMgr;
+        observer = Observable.of(42);
         (<any> instance)._interpreter.rules.push(new Rule(
-          /^exec/, () => ({
-            asynchronous: true,
-            progress: new Promise<void>(r => { this.resolver = r })
+          /^sync/, () => ({
+            asynchronous: false,
+            progress: observer
           })
         ));
-        io.input('execute');
+        io.input('sync execution');
 
-        return instance.queryAction();
+        result = instance.queryAction();
       });
 
-      it('register the job in progress', function () {
-        const jobIds = jobMgr.jobs;
-        expect(jobIds).to.have.length(1);
-      });
-
-      it('returns the promise with job extension', function () {
-        const record = jobMgr.jobs[0];
-        this.resolver(1);
-        return record.job
-          .then(() => {
-            expect(_.last(io.out)).to.match(/Task \d+ completed/);
-            expect(jobMgr.jobs).to.be.empty;
+      it('returns the rule progress', () => {
+        return result.toPromise()
+          .then(value => {
+            expect(value).to.eql(42);
           });
-      })
+      });
+
+      it('does not register any job', () => {
+        const jobRecords = jobMgr.jobs;
+        expect(jobRecords).to.be.empty;
+      });
+    });
+
+    describe('when matching an async rule', function() {
+      let jobMgr: JobManager;
+      let observer;
+
+      beforeEach(() => {
+        jobMgr = (<any> instance)._jobMgr;
+        (<any> instance)._interpreter.rules.push(new Rule(
+          /^async/, () => ({
+            asynchronous: true,
+            progress: Observable.create(o => {
+              observer = o;
+              return () => {
+                observer = null;
+              };
+            })
+          })
+        ));
+        io.input('async execution');
+
+        return instance.queryAction()
+          .toPromise();
+      });
+
+      it('register the job in progress', () => {
+        const jobRecords = jobMgr.jobs;
+        expect(jobRecords).to.have.length(1);
+      });
+    });
+
+    describe('when matching a direct rule', () => {
+      let jobMgr: JobManager;
+      let result: Observable<{}>;
+
+      beforeEach(() => {
+        jobMgr = (<any> instance)._jobMgr;
+        (<any> instance)._interpreter.rules.push(new Rule(
+          /direct/, () => ({
+            asynchronous: false
+          })
+        ));
+        io.input('direct execution');
+
+        result = instance.queryAction();
+      });
+
+      it('returns a empty progress', () => {
+        return result.toPromise()
+          .then(value => {
+            expect(value).to.be.undefined;
+          });
+      });
+
+      it('does not register any job', () => {
+        const jobRecords = jobMgr.jobs;
+        expect(jobRecords).to.be.empty;
+      });
     });
   });
 
-  describe('#start', function () {
+  describe('#start', () => {
     describe('on scenario', function() {
-      beforeEach(function () {
-        this.count = 0;
+      let count: number;
+      beforeEach(() => {
+        count = 0;
         (<any> instance)._interpreter.rules.push(new Rule(
           /(\d)/, () => {
-            this.count += 1;
+            count += 1;
             return { asynchronous: false };
           }
         ));
         io.input('1', '2', 'nothing', 'quit');
-        return instance.start();
+        return instance.start()
+          .toPromise();
       });
 
-      it.skip('flags as running', function () {
-        expect(this.count).to.be.above(0);
+      it.skip('flags as running', () => {
+        expect(count).to.be.above(0);
       });
 
-      it('first great the user', function () {
+      it('first great the user', () => {
         expect(io.out[0]).to.eql('[Celia]>> Hello Sir\n');
       });
 
-      it('asks to do something', function () {
+      it('asks to do something', () => {
         expect(io.out[1]).to.eql('[Celia]>> What to do?\n');
       });
 
-      it('calls repeatedly for actions', function () {
+      it('calls repeatedly for actions', () => {
         expect(io.inputs).to.be.empty;
       });
 
-      it('executes matching actions', function () {
-        expect(this.count).to.eql(2);
+      it('executes matching actions', () => {
+        expect(count).to.eql(2);
       });
 
-      it('ends when executing "quit" or "exit"', function () {
+      it('ends when executing "quit" or "exit"', () => {
         expect(instance.running).to.be.false;
       });
     });
@@ -128,13 +193,13 @@ describe('Jarvis::Instance', function () {
         new Promise(r => { lastQuestionResolver = r; })
       );
 
-      const resolvers: Function[] = [];
+      const observers: Observer<any>[] = [];
       (<any> instance)._interpreter.rules.push(new Rule(
         /^exec/, () => {
-          const progress = new Promise<void>(r => {
-            resolvers.push(r);
-            if (resolvers.length === 2) {
-              resolvers.forEach((resolver, i) => resolver(i));
+          const progress = Observable.create(observer => {
+            observers.push(observer);
+            if (observers.length === 2) {
+              observers.forEach((resolver, i) => observer.complete());
               lastQuestionResolver('quit'); // Ask to stop instance
             }
           });
@@ -142,38 +207,43 @@ describe('Jarvis::Instance', function () {
         }
       ));
 
-      return instance.start();
+      return instance.start()
+        .toPromise();
     });
   });
 
-  describe('default configuration', function () {
-    it('has a rule to run programs', function () {
+  describe('default configuration', () => {
+    it('has a rule to run programs', () => {
       io.input('run \'jarvis\'');
       return getStore().add('execs', 'jarvis', { cmd: 'echo jarvis' })
-        .then(() => instance.queryAction())
+        .then(() => instance.queryAction().toPromise())
         // Wait for the completion of the asynchronous job
-        .then(() => (<JobManager> (<any> instance)._jobMgr).jobs[0].job)
+        .then(() => (<JobManager> (<any> instance)._jobMgr).jobs[0].completion)
         .then(() => {
           expect(io.out).to.include('[Celia]>> Running \'jarvis\'\n');
         });
     });
 
-    it('has a rule to print jobs', function () {
+    it('has a rule to print jobs', () => {
       io.input('jobs');
-      return instance.queryAction().then(() => {
-        const jobOutput = io.out.filter(output => /Jobs at /.test(output));
-        expect(jobOutput).to.have.length(1, 'No output for jobs.');
-      });
+      return instance.queryAction()
+        .toPromise()
+        .then(() => {
+          const jobOutput = io.out.filter(output => /Jobs at /.test(output));
+          expect(jobOutput).to.have.length(1, 'No output for jobs.');
+        });
     });
 
     ['quit', 'exit'].forEach(function(action) {
-      it(`exits the program on ${action}`, function () {
+      it(`exits the program on ${action}`, () => {
         io.input(action);
-        return instance.queryAction().then(() => {
-          expect(instance.running).to.be.false;
-          expect(_.last(io.out)).to.eql('[Celia]>> Good bye Sir\n');
-        });
-      })
+        return instance.queryAction()
+          .toPromise()
+          .then(() => {
+            expect(instance.running).to.be.false;
+            expect(_.last(io.out)).to.eql('[Celia]>> Good bye Sir\n');
+          });
+      });
     });
   });
 });

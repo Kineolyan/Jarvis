@@ -1,9 +1,11 @@
 import {expect} from 'chai';
-const _ = require('lodash');
+import * as _ from 'lodash';
+import {Observable, Subject} from 'rxjs';
 
-import JobManager from './JobManager';
+import JobManager, {JobRecord} from './JobManager';
 import { MockIO } from '../interface/IOs';
 import Dialog from '../interface/Dialog';
+import {ProcessMsg} from '../system/Process';
 
 describe('Jarvis::Jobs::JobManager', function () {
   let io: MockIO;
@@ -21,34 +23,53 @@ describe('Jarvis::Jobs::JobManager', function () {
   });
 
   describe('#registerJob', function () {
-    let job: Promise<any>;
-    let resolver;
+    let subject: Subject<ProcessMsg>;
+    let jobId: number;
 
     beforeEach(function () {
-      job = mgr.registerJob(new Promise(r => { resolver = r; }));
+      subject = new Subject<ProcessMsg>();
+      jobId = mgr.registerJob(subject);
     });
 
     it('assigns an id to the job', function () {
       const ids = Array.from((<any> mgr)._jobs.keys());
-      expect(ids).to.eql([1]);
+      expect(ids).to.eql([jobId]);
     });
 
     it('logs the job completion', function () {
-      resolver(1);
-      return job.then(() => {
-        expect(io.out).to.eql(['[Jarvis]>> Task 1 completed\n']);
+      const job = mgr.getJob(jobId);
+
+      subject.next({code: 0});
+      subject.complete();
+
+      return job.completion.then(() => {
+        expect(io.out).to.eql([`[Jarvis]>> Task ${jobId} completed\n`]);
       });
     });
 
-    it('deregisters the job after completion', function () {
-      resolver(1);
-      return job.then(() => {
-        expect((<any> mgr)._jobs.get(1)).to.be.undefined;
+    it('returns the job on completion', function () {
+      const job = mgr.getJob(jobId);
+
+      subject.complete();
+
+      return job.completion.then(record => {
+        expect(record).to.equal(job);
+      });
+    });
+
+    it('keeps the job after completion', function () {
+      const job = mgr.getJob(jobId);
+      subject.complete();
+
+      return job.completion.then(() => {
+        expect(mgr.getJob(jobId)).not.to.be.undefined;
       });
     });
   });
 
   describe('#printJobs', () => {
+    const neverEndingObservable = Observable.create(subcriber => {});
+
 		it('prints an empty list of tasks', function() {
       mgr.printJobs();
 			expect(io.out).to.have.length(1);
@@ -61,7 +82,7 @@ describe('Jarvis::Jobs::JobManager', function () {
 		});
 
 		it('prints all active tasks', function() {
-			_.times(2, i => mgr.registerJob(new Promise(resolve => {})));
+			_.times(2, i => mgr.registerJob(neverEndingObservable));
       mgr.printJobs();
 
 			expect(io.out).to.have.length(1);
@@ -76,7 +97,7 @@ describe('Jarvis::Jobs::JobManager', function () {
 		});
 
 		it('prints the job description if any', function() {
-			_.times(2, i => mgr.registerJob(new Promise(resolve => {}), 'my action'));
+			_.times(2, i => mgr.registerJob(neverEndingObservable, 'my action'));
       mgr.printJobs();
 
 			expect(io.out).to.have.length(1);
@@ -89,11 +110,15 @@ describe('Jarvis::Jobs::JobManager', function () {
 		});
 
 		it('evolves after task completions', function() {
-      let resolver;
-      const job = mgr.registerJob(new Promise(r => { resolver = r; }));
+      const subject = new Subject<ProcessMsg>();
+      const jobId = mgr.registerJob(subject);
+      const job: JobRecord = mgr.getJob(jobId);
       mgr.printJobs();
-      resolver();
-      return job.then(() => {
+
+      subject.next({code: 0});
+      subject.complete();
+
+      return job.completion.then(() => {
         mgr.printJobs();
 
         // Filter on the expected output as we may have other

@@ -1,4 +1,5 @@
 import {EventEmitter} from 'events';
+import {Observable, Subject} from 'rxjs';
 
 import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
@@ -21,6 +22,7 @@ class Instance extends EventEmitter {
   private _interpreter: Interpreter;
   private _logger: Logger;
   private _store: Store;
+  private _completion: Subject<void>;
 
   constructor(io: IO, name: string) {
     super();
@@ -46,51 +48,62 @@ class Instance extends EventEmitter {
     this._interpreter.rules.push(new WatchRule(
       this._dialog, this._store, this._logger
     ));
+
+    this._completion = new Subject<void>();
   }
 
   get running() {
     return this._running;
   }
 
-  start() {
+  start(): Observable<void> {
     this._dialog.say('Hello Sir');
     this._running = true;
 
-    return this.run();
+    this.run();
+    return this._completion;
   }
 
   run() {
-    return this.queryAction().then(() => {
-      if (this._running) {
-        return this.run();
-      } else {
-        return true;
+    this.queryAction().subscribe({
+      next() {},
+      error: (err) => {
+        this._logger.error('Stopping on error', err);
+        this.quit();
+      },
+      complete: () => {
+        this._running ? this.run() : this.quit();
       }
     });
   }
 
-  queryAction() {
-    return this._dialog.ask('What to do?\n').then(answer => {
-      // TODO Do nothing if the input is empty
-      const result = this._interpreter.interpret(answer);
-      if (result) {
-        if (result.asynchronous && result.progress) {
-            this._jobMgr.registerJob(result.progress, result.description);
-        }
+  queryAction(): Observable<{}> {
+    return Observable.fromPromise(this._dialog.ask('What to do?\n'))
+      .flatMap(answer => {
+        const result = this._interpreter.interpret(answer);
+        if (result) {
+          if (!result.asynchronous && result.progress) {
+            return result.progress;
+          }
 
-        return !result.asynchronous && result.progress ?
-          result.progress : Promise.resolve();
-      } else {
-        this._dialog.report('Unknown action');
-        return Promise.resolve();
-      }
-    });
+          if (result.asynchronous && result.progress) {
+              this._jobMgr.registerJob(result.progress, result.description);
+          }
+
+          return Observable.empty();
+        } else {
+          this._dialog.report('Unknown action');
+          return Observable.empty();
+        }
+      });
   }
 
   quit() {
     this._running = false;
     this._dialog.say('Good bye Sir');
     this.emit('close');
+    this._completion.complete();
+
     return {
       asynchronous: false
     };
