@@ -4,6 +4,7 @@ import {Observable, Subject} from 'rxjs';
 import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
+import {ProcessResult} from './parser/Rule';
 import {RunRule, WatchRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
 import LearnRule from './learning/LearnRule';
@@ -12,6 +13,7 @@ import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
 import Store, {buildDefaultStore, setStore} from './storage/Store'; // FIXME stop using singleton
 import { IO } from './interface/IOs';
+import * as Maybe from './func/Maybe';
 
 /**
  * The main class of the project starting everything
@@ -20,7 +22,7 @@ class Instance extends EventEmitter {
   private _running: boolean;
   private _dialog: Dialog;
   private _jobMgr: JobManager;
-  private _interpreter: Interpreter;
+  private _interpreter: Interpreter<ProcessResult>;
   private _logger: Logger;
   private _store: Store;
   private _completion: Subject<void>;
@@ -37,7 +39,7 @@ class Instance extends EventEmitter {
     this._jobMgr = new JobManager(this._dialog);
     this._store = buildDefaultStore();
     setStore(this._store);
-    this._interpreter = new Interpreter();
+    this._interpreter = new Interpreter<ProcessResult>();
 
     this._interpreter.rules.push(new RunRule(this._dialog, this._logger));
     this._interpreter.rules.push(new QuitRule(() => this.quit()));
@@ -84,7 +86,7 @@ class Instance extends EventEmitter {
     return Observable.fromPromise(this._dialog.ask('What to do?\n'))
       .flatMap(answer => {
         const result = this._interpreter.interpret(answer);
-        if (result) {
+        if (Maybe.isDefined(result)) {
           if (!result.asynchronous && result.progress) {
             return result.progress;
           }

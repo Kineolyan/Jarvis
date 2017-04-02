@@ -1,22 +1,26 @@
 import { Observable, Observer } from 'rxjs';
 
 import { Interpreter } from './../parser/Interpreter';
-import Rule, {RuleResult} from '../parser/Rule';
+import Rule, {ProcessRule, ProcessResult, DefinitionResult} from '../parser/Rule';
 import Dialog from '../interface/Dialog';
 import Process from '../system/Process';
+import * as Maybe from '../func/Maybe';
 
-class LearnRule extends Rule {
-	private _interpreter: Interpreter;
+import ExecRule from './rules/ExecRule';
+
+class LearnRule extends ProcessRule {
+	private _interpreter: Interpreter<DefinitionResult>;
 
 	constructor(private _dialog: Dialog) {
 		super(
 			/learn (?:'(.+?)'|"(.+?)"|([a-z].+)$)/,
 			args => this.learnTask(args)
 		)
-		this._interpreter = new Interpreter();
+		this._interpreter = new Interpreter<DefinitionResult>();
+		this._interpreter.rules.push(new ExecRule(this._dialog));
 	}
 
-	learnTask(args: any): RuleResult {
+	learnTask(args: any): ProcessResult {
 		const taskName = args[1] || args[2] || args[3];
 		this._dialog.say(`Perfect. Let's define this.`);
 		const progress = this.requestDefinition()
@@ -46,8 +50,15 @@ class LearnRule extends Rule {
 				if (/\s*done\s*/.test(action)) {
 					observer.complete();
 				} else {
-					observer.next(action);
-					return this.captureAction(observer, false);
+					const result = this._interpreter.interpret(action);
+					if (Maybe.isDefined(result)) {
+						return result.progress
+							.then(actionResult => observer.next(actionResult))
+							.then(() => this.captureAction(observer, false));
+					} else {
+						this._dialog.report('Cannot understand the action. Try again');
+						return this.captureAction(observer, false);
+					}
 				}
 			});
 	}

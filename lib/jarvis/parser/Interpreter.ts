@@ -1,7 +1,8 @@
-import Rule, {RuleResult} from './Rule';
+import Rule from './Rule';
+import * as Maybe from '../func/Maybe';
 
-export class Interpreter {
-  private _rules: Array<Rule>;
+export class Interpreter<Result> {
+  private _rules: Array<Rule<Result>>;
   constructor() {
     this._rules = [];
   }
@@ -15,14 +16,14 @@ export class Interpreter {
    * @param message - message to Interpreter
    * @return result of the operation, or false if unknown
    */
-  interpret(message: string): RuleResult | null {
+  interpret(message: string): Maybe.Type<Result> {
     for (let rule of this._rules) {
       if (rule.match(message)) {
-        return rule.execute(message);
+        return Maybe.just(rule.execute(message));
       }
     }
 
-    return null;
+    return Maybe.none();
   }
 }
 

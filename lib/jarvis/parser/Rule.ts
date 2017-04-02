@@ -1,27 +1,42 @@
 import {Observable} from 'rxjs';
 import {ProcessMsg} from '../system/Process';
 
-export interface RuleResult {
-  asynchronous: boolean,
-  progress?: Observable<ProcessMsg>,
-  description?: string
+interface RuleAction<Result> {
+  (value: any): Result
 }
 
-export interface RuleAction {
-  (value: any): RuleResult
-}
-
-export class Rule {
-  constructor(private _expr: RegExp, private _action: RuleAction) {}
+class Rule<Result> {
+  constructor(private _expr: RegExp, private _action: RuleAction<Result>) {}
 
   match(message: string) {
     return this._expr.test(message);
   }
 
-  execute(message: string): RuleResult {
+  execute(message: string): Result {
     const matches = this._expr.exec(message);
     return this._action(matches);
   }
 }
 
+interface ProcessResult {
+  asynchronous: boolean,
+  progress?: Observable<ProcessMsg>,
+  description?: string
+}
+class ProcessRule extends Rule<ProcessResult> {}
+
+
+type DefinitionResult = {
+  progress: Promise<string>,
+  description?: string
+}
+class DefinitionRule extends Rule<DefinitionResult> {}
+
 export default Rule;
+export {
+  RuleAction,
+  ProcessResult,
+  ProcessRule,
+  DefinitionResult,
+  DefinitionRule
+};
