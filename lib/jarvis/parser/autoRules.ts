@@ -1,7 +1,7 @@
 import {Observable} from 'rxjs';
 import * as _ from 'lodash';
 
-import Rule, {RuleAction} from './Rule';
+import Rule from './Rule';
 import Dialog from '../interface/Dialog';
 import Store from '../storage/Store';
 import {ExecDefinition} from '../jobs/ExecJob';

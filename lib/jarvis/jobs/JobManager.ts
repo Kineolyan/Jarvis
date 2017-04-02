@@ -93,19 +93,6 @@ ${jobList.length > 0 ? jobList.join('\n') : '-- No jobs registered'}`
   }
 }
 
-/*
-
-          .reduce((acc: {output: string, code?: number}, msg) => {
-            if (isOutput(msg)) {
-              acc.output += msg.data;
-            } else if (isCompletion(msg)) {
-              acc.code = msg.code;
-            }
-
-            return acc;
-          }, {output: ''})
-*/
-
 export default JobManager;
 export {
   JobRecord

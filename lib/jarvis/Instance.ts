@@ -6,6 +6,7 @@ import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
 import {RunRule, WatchRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
+import LearnRule from './learning/LearnRule';
 import {JobsRule} from './parser/jobRules';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
@@ -48,6 +49,8 @@ class Instance extends EventEmitter {
     this._interpreter.rules.push(new WatchRule(
       this._dialog, this._store, this._logger
     ));
+
+    this._interpreter.rules.push(new LearnRule(this._dialog));
 
     this._completion = new Subject<void>();
   }
