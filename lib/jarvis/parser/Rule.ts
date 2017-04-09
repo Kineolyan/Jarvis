@@ -25,18 +25,9 @@ interface ProcessResult {
 }
 class ProcessRule extends Rule<ProcessResult> {}
 
-
-type DefinitionResult = {
-  progress: Promise<string>,
-  description?: string
-}
-class DefinitionRule extends Rule<DefinitionResult> {}
-
 export default Rule;
 export {
   RuleAction,
   ProcessResult,
-  ProcessRule,
-  DefinitionResult,
-  DefinitionRule
+  ProcessRule
 };

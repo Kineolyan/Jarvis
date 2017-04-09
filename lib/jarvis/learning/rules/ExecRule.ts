@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as fs from 'fs';
 
-import {DefinitionRule, DefinitionResult} from '../../parser/Rule';
+import {DefinitionRule, DefinitionResult} from '../DefinitionRule';
 import Dialog from '../../interface/Dialog';
 import Process from '../../system/Process';
 import * as Maybe from '../../func/Maybe';
@@ -17,9 +17,8 @@ class ExecRule extends DefinitionRule {
 
 	recordCommand(args): DefinitionResult {
 		const command = args[1] || args[2] || args[3];
-		const progress = this.getCommandPwd()
-			.then(path => ({cmd: command, cwd: path}))
-			.then(JSON.stringify);
+		const progress: Promise<ExecDefinition> = this.getCommandPwd()
+			.then(path => ({cmd: command, cwd: path}));
 
 		return {
 			progress: progress

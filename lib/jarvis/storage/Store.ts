@@ -60,6 +60,12 @@ function buildStore(Storage, cbk: (mapping: ResourceMapping) => void = _.noop): 
       dataFilePath('watches.json'))
     )
   );
+  mapping.set(
+    'programs',
+    new MapApi(new Storage(
+      dataFilePath('programs.json'))
+    )
+  );
   cbk(mapping);
 
   return new Store(mapping);

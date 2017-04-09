@@ -23,4 +23,23 @@ class JobsRule extends ProcessRule {
 	}
 }
 
-export {JobsRule};
+class JobLogRule extends ProcessRule {
+	constructor(private _jobMgr: JobManager, private _dialog: Dialog) {
+		super(
+			/^show logs of job (\d+)/,
+			args => this.displayLogs(args)
+		);
+	}
+
+	displayLogs(args) {
+		const jobId = parseInt(args[1]);
+		this._jobMgr.logJob(jobId);
+
+		return {
+			asynchronous: false,
+			progress: Process.success()
+		};
+	}
+}
+
+export {JobsRule, JobLogRule};

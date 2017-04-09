@@ -1,17 +1,21 @@
 import { Observable, Observer } from 'rxjs';
 
 import { Interpreter } from './../parser/Interpreter';
-import Rule, {ProcessRule, ProcessResult, DefinitionResult} from '../parser/Rule';
+import Rule, {ProcessRule, ProcessResult} from '../parser/Rule';
 import Dialog from '../interface/Dialog';
 import Process from '../system/Process';
 import * as Maybe from '../func/Maybe';
+import {ExecDefinition} from '../jobs/ExecJob';
+import Store from '../storage/Store';
 
+import Program from './Program';
 import ExecRule from './rules/ExecRule';
+import {DefinitionResult} from './DefinitionRule';
 
 class LearnRule extends ProcessRule {
 	private _interpreter: Interpreter<DefinitionResult>;
 
-	constructor(private _dialog: Dialog) {
+	constructor(private _dialog: Dialog, private _store: Store) {
 		super(
 			/learn (?:'(.+?)'|"(.+?)"|([a-z].+)$)/,
 			args => this.learnTask(args)
@@ -25,16 +29,20 @@ class LearnRule extends ProcessRule {
 		this._dialog.say(`Perfect. Let's define this.`);
 		const progress = this.requestDefinition()
 			.reduce(
-				(commands, action) => {
-					commands.push(action);
-					return commands;
+				(program: Program, action) => {
+					program.steps.push(action);
+					return program;
 				},
-				[]
-			).map(commands => {
-				const commandList = commands.map((c, i) => ` #${i + 1} - ${c}`).join('\n');
+				{
+					name: taskName,
+					steps: []
+				}
+			).map(program => {
+				const commandList = program.steps.map((c, i) => ` #${i + 1} - ${JSON.stringify(c)}`).join('\n');
 				this._dialog.say(`You defined ${taskName} as:\n${commandList}`);
-
-				return {code: 0};
+				return program;
+			}).flatMap(program => {
+				return Process.fromPromise(this.store(program));
 			});
 
 		return {
@@ -43,7 +51,7 @@ class LearnRule extends ProcessRule {
 		};
 	}
 
-	captureAction(observer: Observer<string>, first: boolean): Promise<string> {
+	captureAction(observer: Observer<ExecDefinition>, first: boolean): Promise<ExecDefinition> {
 		return this._dialog.ask(`What to do ${first ? 'first' : 'then'}? `)
 			.catch(err => observer.error(err))
 			.then(action => {
@@ -63,10 +71,14 @@ class LearnRule extends ProcessRule {
 			});
 	}
 
-	requestDefinition(): Observable<string> {
+	requestDefinition(): Observable<ExecDefinition> {
 		return Observable.create(observer => {
 			this.captureAction(observer, true);
 		});
+	}
+
+	store(program: Program): Promise<any> {
+		return this._store.add('programs', program.name, program);
 	}
 }
 

@@ -91,6 +91,25 @@ ${jobList.length > 0 ? jobList.join('\n') : '-- No jobs registered'}`
 
     this._dialog.say(message);
   }
+
+  logJob(jobId: number) {
+		const job = this._jobs.get(jobId);
+		if (job) {
+      let message = `Logs of ${job.description} (${jobId}):\n`;
+      if (job.error) {
+        message += `  Error reported: ${job.error.message}\n`;
+        if (job.error.stack) {
+          message += `  at ${job.error.stack}\n`;
+        }
+      }
+      if (job.logs.length > 0) {
+        message += `Logs: ${job.logs.join('\n')}`;
+      }
+      this._dialog.say(message);
+		} else {
+			this._dialog.report(`Job ${jobId} does not exist`);
+		}
+  }
 }
 
 export default JobManager;

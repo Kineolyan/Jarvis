@@ -8,7 +8,8 @@ import {ProcessResult} from './parser/Rule';
 import {RunRule, WatchRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
 import LearnRule from './learning/LearnRule';
-import {JobsRule} from './parser/jobRules';
+import DoLearningRule from './learning/DoLearningRule';
+import {JobsRule, JobLogRule} from './parser/jobRules';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
 import Store, {buildDefaultStore, setStore} from './storage/Store'; // FIXME stop using singleton
@@ -48,11 +49,14 @@ class Instance extends EventEmitter {
     this._interpreter.rules.push(new ClearRule(this._dialog, this._store));
 
     this._interpreter.rules.push(new JobsRule(this._jobMgr));
+    this._interpreter.rules.push(new JobLogRule(this._jobMgr, this._dialog));
+
     this._interpreter.rules.push(new WatchRule(
       this._dialog, this._store, this._logger
     ));
 
-    this._interpreter.rules.push(new LearnRule(this._dialog));
+    this._interpreter.rules.push(new LearnRule(this._dialog, this._store));
+    this._interpreter.rules.push(new DoLearningRule(this._dialog, this._store));
 
     this._completion = new Subject<void>();
   }

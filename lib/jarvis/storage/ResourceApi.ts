@@ -18,7 +18,6 @@ class MapApi implements ResourceApi {
   get(): Promise<any> {
     if (!this._cache) {
       this._cache = this._store.read();
-    } else {
     }
 
     return this._cache;
