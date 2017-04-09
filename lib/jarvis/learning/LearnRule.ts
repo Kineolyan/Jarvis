@@ -1,6 +1,6 @@
 import { Observable, Observer } from 'rxjs';
 
-import { Interpreter } from './../parser/Interpreter';
+import Interpreter from './../parser/Interpreter';
 import Rule, {ProcessRule, ProcessResult} from '../parser/Rule';
 import Dialog from '../interface/Dialog';
 import Process from '../system/Process';
