@@ -26,7 +26,7 @@ class JobsRule extends ProcessRule {
 class JobLogRule extends ProcessRule {
 	constructor(private _jobMgr: JobManager, private _dialog: Dialog) {
 		super(
-			/^show logs of job (\d+)/,
+			/^show logs? (of|for) job (\d+)/,
 			args => this.displayLogs(args)
 		);
 	}

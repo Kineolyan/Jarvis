@@ -56,7 +56,7 @@ class Instance extends EventEmitter {
     ));
 
     this._interpreter.rules.push(new LearnRule(this._dialog, this._store));
-    this._interpreter.rules.push(new DoLearningRule(this._dialog, this._store));
+    this._interpreter.rules.push(new DoLearningRule(this._dialog, this._store, this._jobMgr));
 
     this._completion = new Subject<void>();
   }

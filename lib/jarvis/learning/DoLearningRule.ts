@@ -1,17 +1,23 @@
 import {Observable} from 'rxjs';
+import * as _ from 'lodash';
 
 import {ProcessRule} from '../parser/Rule';
 import Store from '../storage/Store';
 import Process from '../system/Process';
 import Dialog from '../interface/Dialog';
 import * as Maybe from '../func/Maybe';
+import JobManager, {JobRecord} from './../jobs/JobManager';
 import {ProcessMsg} from '../system/Process';
+import ExecJob, {ExecDefinition} from '../jobs/ExecJob';
 
 import Program from './Program';
 
 class DoLearningRule extends ProcessRule {
 
-	constructor(private _dialog: Dialog, private _store: Store) {
+	constructor(
+			private _dialog: Dialog,
+			private _store: Store,
+			private _jobMgr: JobManager) {
 		super(
 			/do (?:'(.+?)'|"(.+?)"|(.+?)$)/,
 			args => this.startProgram(args)
@@ -40,15 +46,32 @@ class DoLearningRule extends ProcessRule {
 	}
 
 	executeProgram(name: string, program: Maybe.Type<Program>): Observable<ProcessMsg> {
-		this._dialog.say(`Trying to execute ${name}: ${JSON.stringify(program)}`);
 		if (Maybe.isDefined(program)) {
-			return Process.success();
+			return Observable.fromPromise(this.runSteps(program));
 		} else {
 			this._dialog.report(`Program ${name} does not exist`);
 			return Observable.of({
 				code: 1
 			});
 		}
+	}
+
+	runSteps(program: Program): Promise<ProcessMsg> {
+		return _.reduce(
+			program.steps,
+			(progress: Promise<any>, step: ExecDefinition, i: number) => progress.then(() => {
+				const execution = new ExecJob(step).execute();
+				const jobId = this._jobMgr.registerJob(execution, `Step ${i} of program ${program.name}`);
+				const job = this._jobMgr.getJob(jobId);
+				if (job) {
+					return job.completion;
+				} else {
+					throw new Error('Step job not found in the middle of the process');
+				}
+			}),
+			Promise.resolve(undefined)
+		)
+		.then(() => ({code: 0}));
 	}
 
 }
