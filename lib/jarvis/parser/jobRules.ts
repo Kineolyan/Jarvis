@@ -25,8 +25,10 @@ class JobsRule extends ProcessRule {
 
 class JobLogRule extends ProcessRule {
 	constructor(private _jobMgr: JobManager, private _dialog: Dialog) {
+		// FIXME do tests for all the commands that should match
+		// FIXME test that a command does not match multiple rules
 		super(
-			/^show logs? (of|for) job (\d+)/,
+			/^show logs? (?:of|for) job (\d+)/,
 			args => this.displayLogs(args)
 		);
 	}

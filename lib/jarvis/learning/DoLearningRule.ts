@@ -59,17 +59,24 @@ class DoLearningRule extends ProcessRule {
 	runSteps(program: Program): Promise<ProcessMsg> {
 		return _.reduce(
 			program.steps,
-			(progress: Promise<any>, step: ExecDefinition, i: number) => progress.then(() => {
-				const execution = new ExecJob(step).execute();
-				const jobId = this._jobMgr.registerJob(execution, `Step ${i} of program ${program.name}`);
-				const job = this._jobMgr.getJob(jobId);
-				if (job) {
-					return job.completion;
-				} else {
-					throw new Error('Step job not found in the middle of the process');
-				}
-			}),
-			Promise.resolve(undefined)
+			(progress: Promise<Maybe.Type<JobRecord>>, step: ExecDefinition, i: number) => progress
+				.then((previousRecord) => {
+					// Exit after a previous failure
+					if (Maybe.isDefined(previousRecord) && previousRecord.code !== 0) {
+						return Maybe.just(previousRecord);
+					}
+
+					const execution = new ExecJob(step).execute();
+					const jobId = this._jobMgr.registerJob(execution, `Step ${i} of program ${program.name}`);
+					const job = this._jobMgr.getJob(jobId);
+					if (job) {
+						return job.completion
+							.then(Maybe.just);
+					} else {
+						throw new Error('Step job not found in the middle of the process');
+					}
+				}),
+			Promise.resolve(Maybe.none())
 		)
 		.then(() => ({code: 0}));
 	}
