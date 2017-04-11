@@ -7,6 +7,7 @@ import { MockIO } from './interface/IOs';
 import { JobManager } from './jobs/JobManager';
 import Rule from './parser/Rule';
 import {getStore, setStore, buildTestStore} from './storage/Store';
+import {InterpreterChecker} from './parser/Interpreter';
 
 describe('Jarvis::Instance', () => {
   let io: MockIO;
@@ -245,5 +246,42 @@ describe('Jarvis::Instance', () => {
           });
       });
     });
+  });
+
+  it('has correct rules matching', () => {
+    new InterpreterChecker().fromInstance((<any>instance)._interpreter)
+      .addMatches('RunRule',
+        'run "jarvis in the space"',
+        "run 'summer after spring'"
+      )
+      .addMatches('QuitRule', 'quit', 'exit')
+      .addMatches('RecordRule',
+        'record "new rule with double quotes"',
+        "record 'new rule with single quotes'"
+      )
+      .addMatches('ClearRule',
+        'clear "new rule with double quotes"',
+        "clear 'new rule with single quotes'"
+      )
+      .addMatches('JobsRule', 'jobs')
+      .addMatches('JobLogRule',
+        'show logs for job 4025',
+        'show logs of job 425034'
+      )
+      .addMatches('WatchRule',
+        'watch "this dq"',
+        "watch 'that sq'"
+      )
+      .addMatches('LearnRule',
+        'learn "something in dq"',
+        "learn 'this sq command'",
+        'learn what follows'
+      )
+      .addMatches('DoLearningRule',
+        'do that task',
+        'do "something"',
+        "do 'something else than expected'"
+      )
+      .runTests();
   });
 });
