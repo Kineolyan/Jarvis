@@ -10,7 +10,7 @@ import {ExecDefinition} from '../../jobs/ExecJob';
 class ExecRule extends DefinitionRule {
 	constructor(private _dialog: Dialog) {
 		super(
-			/exec +(?:'(.+)'|"(.+)"|(.+)$)/,
+			/^\s*exec +(?:'(.+)'|"(.+)"|(.+)$)/,
 			args => this.recordCommand(args)
 		)
 	}

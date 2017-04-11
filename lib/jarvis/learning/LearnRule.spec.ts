@@ -27,6 +27,9 @@ describe('Jarvis::learning::LearnRule', () => {
 				'exec "simple escaped command"',
 				"exec 'other cmd'"
 			)
+			.addTraps(
+				'you may be tempted to exec the rest of this line'
+			)
       .runTests();
   });
 });

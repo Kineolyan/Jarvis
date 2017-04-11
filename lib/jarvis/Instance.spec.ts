@@ -252,7 +252,8 @@ describe('Jarvis::Instance', () => {
     new InterpreterChecker().fromInstance((<any>instance)._interpreter)
       .addMatches('RunRule',
         'run "jarvis in the space"',
-        "run 'summer after spring'"
+        "run 'summer after spring'",
+        'run "learn \'something\'"'
       )
       .addMatches('QuitRule', 'quit', 'exit')
       .addMatches('RecordRule',
@@ -275,12 +276,18 @@ describe('Jarvis::Instance', () => {
       .addMatches('LearnRule',
         'learn "something in dq"',
         "learn 'this sq command'",
-        'learn what follows'
+        'learn what follows',
+        'learn how to run these tests'
       )
       .addMatches('DoLearningRule',
         'do that task',
         'do "something"',
-        "do 'something else than expected'"
+        "do 'something else than expected'",
+        'do clean "because i care"'
+      )
+      .addTraps(
+        'should not try to learn this',
+        'you may be tempted to run "this statement"',
       )
       .runTests();
   });

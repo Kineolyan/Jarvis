@@ -35,9 +35,11 @@ interface RuleRegistry {
 
 class InterpreterChecker {
   private _rules: Map<string, {rule: Rule<any>, matches: string[]}>;
+  private _traps: string[];
 
   constructor() {
     this._rules = new Map();
+    this._traps = [];
   }
 
   fromInstance(interpreter: Interpreter<any>): InterpreterChecker {
@@ -63,6 +65,16 @@ class InterpreterChecker {
     return this;
   }
 
+  /**
+   * Adds multiples inputs that should not match any rule.
+   * @param traps inputs meant to trick matchers
+   * @return this
+   */
+  addTraps(...traps): InterpreterChecker {
+    this._traps.push(...traps);
+    return this;
+  }
+
   registerRule(rule: Rule<any>, ruleName: string): RuleRegistry {
     this._rules.set(ruleName, {rule, matches: []});
     return {
@@ -85,6 +97,7 @@ class InterpreterChecker {
 
     const mismatches: Map<string, string[]> = new Map();
     const overlaps: Map<string, Set<string>> = new Map();
+    const traps: Map<string, string[]> = new Map();
     for (const [name, {rule, matches}] of this._rules.entries()) {
       matches.reduce(
         (result, input) => {
@@ -100,6 +113,22 @@ class InterpreterChecker {
           return result;
         },
         mismatches
+      );
+
+      this._traps.reduce(
+        (result, input) => {
+          if (rule.match(input)) {
+            let failure = result.get(input);
+            if (failure) {
+              failure.push(name);
+            } else {
+              result.set(input, [name]);
+            }
+          }
+
+          return result;
+        },
+        traps
       );
 
       for (const [otherName, {rule: otherRule}] of this._rules.entries()) {
@@ -123,13 +152,13 @@ class InterpreterChecker {
       }
     }
 
-    if (mismatches.size > 0 || overlaps.size > 0) {
+    if (mismatches.size > 0 || overlaps.size > 0 || traps.size > 0) {
       let message = 'Test results:\n';
 
       if (mismatches.size > 0) {
         message += `-- Rules not matching with their inputs:\n`;
         for (const [name, unmatches] of mismatches.entries()) {
-          message += ` * ${name}\n`;
+          message += ` :$ ${name}\n`;
           unmatches.forEach(input => message += `   - ${input}\n`);
         }
       }
@@ -137,7 +166,15 @@ class InterpreterChecker {
       if (overlaps.size > 0) {
         message += `-- Overlapping rules matching the same inputs:\n`;
         for (const [input, rules] of overlaps.entries()) {
-          message += ` * ${input}\n`;
+          message += ` > < ${input}\n`;
+          rules.forEach(rule => message += `   - ${rule}\n`);
+        }
+      }
+
+      if (traps.size > 0) {
+        message += `-- Traps not avoided:\n`;
+        for (const [input, rules] of traps.entries()) {
+          message += ` :( ${input}\n`;
           rules.forEach(rule => message += `   - ${rule}\n`);
         }
       }

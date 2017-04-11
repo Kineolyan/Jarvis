@@ -17,7 +17,7 @@ class LearnRule extends ProcessRule {
 
 	constructor(private _dialog: Dialog, private _store: Store) {
 		super(
-			/learn (?:'(.+?)'|"(.+?)"|([a-z].+)$)/,
+			/^\s*learn (?:'(.+?)'|"(.+?)"|([a-z].+)$)/,
 			args => this.learnTask(args)
 		)
 		this._interpreter = new Interpreter<DefinitionResult>();
