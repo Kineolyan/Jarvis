@@ -8,7 +8,7 @@ import * as Maybe from '../func/Maybe';
 import {ExecDefinition} from '../jobs/ExecJob';
 import Store from '../storage/Store';
 
-import Program from './Program';
+import Program from './program/Program';
 import ExecRule from './rules/ExecRule';
 import {DefinitionResult} from './DefinitionRule';
 
