@@ -9,16 +9,20 @@ import Logger from '../interface/Logger';
 import {ProcessMsg, isOutput, isCompletion} from '../system/Process';
 
 interface CmdWatchDefinition {
-	kind: 'cmd';
 	files: string,
 	cmd: ExecDefinition
 }
 interface JobWatchDefinition {
-	kind: 'job'
 	files: string,
 	job: string
 }
 type WatchDefinition = CmdWatchDefinition | JobWatchDefinition;
+function isCommand(definition: WatchDefinition): definition is CmdWatchDefinition {
+	return 'cmd' in definition;
+}
+function isJob(definition: WatchDefinition): definition is JobWatchDefinition {
+	return 'job' in definition;
+}
 
 class WatchExecutor {
 	private _runningJob: boolean;
@@ -98,7 +102,8 @@ class WatchJob implements Job {
 		return Observable.fromPromise(this.createAction())
 			.flatMap(job => {
 				if (this._runner === undefined) {
-					const runner = this._runner = new WatchExecutor(job);
+					const runner = new WatchExecutor(job);
+					this._runner = runner;
 					// FIXME how to stop the runner
 					const cbk = _.debounce(path => runner.run(), this._debounceTime);
 					this._watcher = chokidar.watch(this._def.files, {
@@ -129,9 +134,12 @@ class WatchJob implements Job {
 	}
 
 	private createAction(): Promise<ExecJob> {
-		switch (this._def.kind) {
-			case 'cmd': return Promise.resolve(new ExecJob(this._def.cmd));
-			case 'job': return ExecJob.create(this._def.job);
+		if (isCommand(this._def)) {
+			return Promise.resolve(new ExecJob(this._def.cmd));
+		} else if (isJob(this._def)) {
+			return ExecJob.create(this._def.job);
+		} else {
+			return Promise.reject(new Error(`Unknown type of definition ${JSON.stringify(this._def)}`));
 		}
 	}
 }

@@ -156,7 +156,6 @@ describe('Jarvis::Jobs::WatchJob', () => {
 		};
 		job = new WatchJob(
 			{
-				kind: 'cmd',
 				files: watchedFilePath,
 				cmd: {
 					cmd: 'echo "job executed"'

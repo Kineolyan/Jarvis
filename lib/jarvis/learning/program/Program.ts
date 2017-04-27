@@ -1,4 +1,4 @@
-import { ExecDefinition } from './../jobs/ExecJob';
+import { ExecDefinition } from './../../jobs/ExecJob';
 
 interface Program {
 	name: string;

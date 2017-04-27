@@ -46,7 +46,7 @@ class WatchRule extends ProcessRule {
 	}
 
   runJob(args): ProcessResult {
-    const name = args[1];
+    const name = args[1] || args[2];
     const progress = Observable.fromPromise(this.resolveDefinition(name))
       .flatMap(watchDefinition => {
         if (watchDefinition !== null) {
@@ -76,7 +76,6 @@ class WatchRule extends ProcessRule {
           return this._store.get('execs')
             .then(execs => execs[watchDef.job])
             .then(exec => ({
-              kind: 'cmd',
               files: watchDef.files,
               cmd: exec
             }));
