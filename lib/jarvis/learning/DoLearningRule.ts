@@ -49,7 +49,7 @@ class DoLearningRule extends ProcessRule {
 	executeProgram(name: string, program: Maybe.Type<Program>): Observable<ProcessMsg> {
 		if (Maybe.isDefined(program)) {
 			const executor = new ProgramExecutor(program, this._jobMgr);
-			return Observable.fromPromise(executor.execute());
+			return executor.execute();
 		} else {
 			this._dialog.report(`Program ${name} does not exist`);
 			return Observable.of({

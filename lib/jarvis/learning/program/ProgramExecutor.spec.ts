@@ -18,7 +18,7 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
   });
 
   describe('#execute', () => {
-    it('rusn the program to the end', () => {
+    it('runs the program to the end', () => {
       const program: Program = {
         name: "explore",
         steps: [
@@ -32,6 +32,7 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
       };
       const executor = new ProgramExecutor(program, jobMgr);
       return executor.execute()
+        .toPromise()
         .then(msg => {
           expect(isCompletion(msg)).to.eql(true, 'Completion message');
           const result = msg as ProcessCompletion;

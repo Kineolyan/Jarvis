@@ -20,7 +20,7 @@ function isCompletion(msg: ProcessMsg): msg is ProcessCompletion {
 	return (<ProcessCompletion>msg).code !== undefined;
 }
 
-type Process = Observable<ProcessMsg>;
+interface Process extends Observable<ProcessMsg> {}
 
 function execute(cmd: string, args: string[], options: ProcessOptions): Observable<ProcessMsg> {
 	const processObs = Observable.create(function subscribe(observer) {
