@@ -1,72 +1,84 @@
 const _ = require('lodash');
 import {expect} from 'chai';
 
-import Rule from './Rule';
-import Interpreter from './Interpreter';
 import Dialog from '../interface/Dialog';
 import { MockIO } from '../interface/IOs';
+import * as Maybe from '../func/Maybe';
 
-describe('Jarvis::Parser::Interpreter', function () {
-  beforeEach(function () {
-    this.interpreter = new Interpreter();
-  });
+import Rule from './Rule';
+import Interpreter from './Interpreter';
 
-  describe('#constructor', function () {
-    it('has no default rule', function () {
-      expect(this.interpreter.rules).to.be.empty;
+describe('Jarvis::Parser::Interpreter', () => {
+
+  describe('#constructor', () => {
+    let interpreter: Interpreter<any>;
+
+    beforeEach(() => {
+      interpreter = new Interpreter<any>();
+    });
+
+    it('has no default rule', () => {
+      expect(interpreter.rules).to.be.empty;
     });
   });
 
-  describe('#interpret', function () {
-    beforeEach(function () {
-      this.list = [];
+  describe('#interpret', () => {
+    let interpreter: Interpreter<string>;
+
+    beforeEach(() => {
+      interpreter = new Interpreter<string>();
+    });
+    let list: string[];
+
+    beforeEach(() => {
+      list = [];
       ['a', 'b', 'ab?'].forEach((pattern, i) => {
-        this.interpreter.rules.push(new Rule(
+        interpreter.rules.push(new Rule(
           new RegExp(pattern), () => {
-            this.list.push(pattern);
-            return {
-              asynchronous: i % 2 === 0,
-              progress: Promise.resolve()
-            };
+            list.push(pattern);
+            return pattern;
         }));
       });
     });
 
-    describe('on a unique match', function () {
-      beforeEach(function () {
-        this.result = this.interpreter.interpret('b');
+    describe('on a unique match', () => {
+      let result: Maybe.Type<string>;
+      beforeEach(() => {
+        result = interpreter.interpret('b');
       });
 
-      it('executes the matching rule', function () {
-        expect(this.list).to.eql(['b']);
+      it('executes the matching rule', () => {
+        expect(list).to.eql(['b']);
       });
 
-      it('returns true since at least one rule matches', function () {
-        expect(this.result.asynchronous).to.eql(false);
-      });
-    });
-
-    describe('without matching rules', function () {
-      beforeEach(function () {
-        this.result = this.interpreter.interpret('c');
-      });
-
-      it('executes no rules', function () {
-        expect(this.list).to.be.empty;
-      });
-
-      it('returns false', function () {
-        expect(this.result).to.equal(null);
+      it('returns true since at least one rule matches', () => {
+        expect(Maybe.isDefined(result)).to.equal(true, 'Result defined');
+        expect(result).to.eql('b');
       });
     });
 
-    describe('with many matching rules', function () {
-      beforeEach(function () {
-        return this.interpreter.interpret('a').progress;
+    describe('without matching rules', () => {
+      let result: Maybe.Type<string>;
+      beforeEach(() => {
+        result = interpreter.interpret('c');
       });
 
-      it('executes the first matching rule', function () {
-        expect(this.list).to.eql(['a']);
+      it('executes no rules', () => {
+        expect(list).to.be.empty;
+      });
+
+      it('returns false', () => {
+        expect(Maybe.isUndefined(result)).to.equal(true, 'No result defined');
+      });
+    });
+
+    describe('with many matching rules', () => {
+      beforeEach(() => {
+        interpreter.interpret('a');
+      });
+
+      it('executes the first matching rule', () => {
+        expect(list).to.eql(['a']);
       });
     });
   });

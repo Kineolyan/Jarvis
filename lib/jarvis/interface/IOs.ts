@@ -110,7 +110,11 @@ class AIO implements IO {
 	 */
 	complete(line: string, cbk) {
 		Promise.all([
-			Promise.resolve(['quit', 'exit', 'record \'', 'record "']),
+			Promise.resolve([
+				'quit', 'exit', 
+				'record \'', 'record "',
+				'show logs for job '
+			]),
 			ExecJob.tasks()
 				.then(values => _(values)
 					.keys()

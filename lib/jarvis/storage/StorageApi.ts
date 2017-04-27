@@ -13,7 +13,9 @@ class JsonFileApi implements StorageApi<Object> {
     return new Promise((resolve, reject) => {
       fs.readFile(this._filePath, {encoding: 'utf8', flag: 'r'}, (err, data) => {
         if (!err) {
-           resolve(data && data.length >= 2 ? data : '{}');
+          resolve(data && data.length >= 2 ? data : '{}');
+        } else if (err.code === 'ENOENT') {
+          resolve('{}');
         } else {
           reject(err);
         }

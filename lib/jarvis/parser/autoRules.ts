@@ -1,7 +1,7 @@
 import {Observable} from 'rxjs';
 import * as _ from 'lodash';
 
-import Rule, {RuleAction} from './Rule';
+import {ProcessRule} from './Rule';
 import Dialog from '../interface/Dialog';
 import Store from '../storage/Store';
 import {ExecDefinition} from '../jobs/ExecJob';
@@ -9,7 +9,7 @@ import Process from '../system/Process';
 
 const EXEC_STORE = 'execs';
 
-class RecordRule extends Rule {
+class RecordRule extends ProcessRule {
 	constructor(private _dialog: Dialog, private _store: Store) {
 		super(
 			/^record (?:'(.+?)'|"(.+?)")/,
@@ -37,7 +37,7 @@ class RecordRule extends Rule {
 	}
 }
 
-class ClearRule extends Rule {
+class ClearRule extends ProcessRule {
 	constructor(private _dialog: Dialog, private _store: Store) {
 		super(
 			/^clear (?:'(.+?)'|"(.+?)")/,

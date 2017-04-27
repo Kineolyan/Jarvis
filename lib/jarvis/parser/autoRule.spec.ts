@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { MockIO } from '../interface/IOs';
 import Dialog from '../interface/Dialog';
-import { RuleResult } from './Rule';
+import { ProcessResult } from './Rule';
 import {RecordRule, ClearRule} from './autoRules';
 import Store, {buildTestStore} from '../storage/Store';
 
@@ -26,7 +26,7 @@ describe('RecordRule', function() {
 	});
 
 	describe('#execute', function() {
-		let result: RuleResult;
+		let result: ProcessResult;
 
 		beforeEach(function() {
 			io.input('do something', 'nowhere');

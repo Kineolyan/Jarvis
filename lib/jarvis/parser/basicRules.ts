@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import Rule, {RuleAction, RuleResult} from './Rule';
+import {RuleAction, ProcessRule, ProcessResult} from './Rule';
 import Dialog from '../interface/Dialog';
 import Logger from '../interface/Logger';
 import ExecJob from '../jobs/ExecJob';
@@ -8,7 +8,7 @@ import WatchJob, {CmdWatchDefinition} from '../jobs/WatchJob';
 import Store from '../storage/Store';
 import Process from '../system/Process';
 
-class RunRule extends Rule {
+class RunRule extends ProcessRule {
 	constructor(private _dialog: Dialog, private _logger: Logger) {
 		super(
       /^run (?:'(.+?)'|"(.+?)")/,
@@ -16,7 +16,7 @@ class RunRule extends Rule {
     );
 	}
 
-  runJob(args: any): RuleResult {
+  runJob(args: any): ProcessResult {
     const name = args[1];
     const progress = Observable.fromPromise(ExecJob.create(name))
       .flatMap(job => {
@@ -37,7 +37,7 @@ class RunRule extends Rule {
   }
 }
 
-class WatchRule extends Rule {
+class WatchRule extends ProcessRule {
 	constructor(private _dialog: Dialog, private _store: Store, private _logger: Logger) {
 		super(
       /^watch (?:'(.+?)'|"(.+?)")/,
@@ -45,8 +45,8 @@ class WatchRule extends Rule {
     );
 	}
 
-  runJob(args): RuleResult {
-    const name = args[1];
+  runJob(args): ProcessResult {
+    const name = args[1] || args[2];
     const progress = Observable.fromPromise(this.resolveDefinition(name))
       .flatMap(watchDefinition => {
         if (watchDefinition !== null) {
@@ -76,7 +76,6 @@ class WatchRule extends Rule {
           return this._store.get('execs')
             .then(execs => execs[watchDef.job])
             .then(exec => ({
-              kind: 'cmd',
               files: watchDef.files,
               cmd: exec
             }));
@@ -92,8 +91,8 @@ class WatchRule extends Rule {
   }
 }
 
-class QuitRule extends Rule {
-	constructor(quitAction: RuleAction) {
+class QuitRule extends ProcessRule {
+	constructor(quitAction: RuleAction<ProcessResult>) {
 		super(/^\s*(exit|quit)\s*$/, quitAction);
 	}
 }
