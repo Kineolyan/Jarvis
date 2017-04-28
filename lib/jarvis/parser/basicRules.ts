@@ -40,13 +40,13 @@ class RunRule extends ProcessRule {
 class WatchRule extends ProcessRule {
 	constructor(private _dialog: Dialog, private _store: Store, private _logger: Logger) {
 		super(
-      /^watch (?:'(.+?)'|"(.+?)")/,
+      /^watch ('[^']+'|"[^"]+")\s*$/,
       args => this.runJob(args)
     );
 	}
 
   runJob(args): ProcessResult {
-    const name = args[1] || args[2];
+    const name = ProcessRule.getQuotedArg(args[1]);
     const progress = Observable.fromPromise(this.resolveDefinition(name))
       .flatMap(watchDefinition => {
         if (watchDefinition !== null) {
@@ -91,6 +91,36 @@ class WatchRule extends ProcessRule {
   }
 }
 
+class DynamicWatchRule extends ProcessRule {
+	constructor(private _dialog: Dialog, private _logger: Logger) {
+		super(
+      /^watch ('.+?'|".+?"|[^ ]+) and do ('.+'|".+"|.+$)(?: in ('.+'|".+"|.+$))?/,
+      args => this.startWatching(args)
+    );
+	}
+
+  startWatching(args): ProcessResult {
+    const directory = ProcessRule.getQuotedArg(args[1]);
+    const cmd = ProcessRule.getQuotedArg(args[2]);
+    const cwd = args[3] 
+      ? ProcessRule.getQuotedArg(args[3])
+      : process.cwd();
+    const definition: CmdWatchDefinition = {
+      files: directory,
+      cmd: {cmd, cwd}
+    };
+
+    const watch = new WatchJob(definition, {});
+    const progress = watch.execute();
+
+    return {
+      asynchronous: true,
+      progress,
+      description: `watching ${directory} and doing ${cmd}`
+    };
+  }
+}
+
 class QuitRule extends ProcessRule {
 	constructor(quitAction: RuleAction<ProcessResult>) {
 		super(/^\s*(exit|quit)\s*$/, quitAction);
@@ -100,5 +130,6 @@ class QuitRule extends ProcessRule {
 export {
 	RunRule,
   WatchRule,
+  DynamicWatchRule,
 	QuitRule
 };

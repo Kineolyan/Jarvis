@@ -16,6 +16,14 @@ class Rule<Result> {
     const matches = this._expr.exec(message);
     return this._action(matches);
   }
+
+  static getQuotedArg(arg: string): string {
+    if (arg[0] === '\'' || arg[0] === '"') {
+      return arg.substring(1, arg.length - 1);
+    } else {
+      return arg;
+    }
+  }
 }
 
 interface ProcessResult {

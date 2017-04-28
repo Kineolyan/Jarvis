@@ -166,7 +166,7 @@ class InterpreterChecker {
       if (overlaps.size > 0) {
         message += `-- Overlapping rules matching the same inputs:\n`;
         for (const [input, rules] of overlaps.entries()) {
-          message += ` > < ${input}\n`;
+          message += ` :X ${input}\n`;
           rules.forEach(rule => message += `   - ${rule}\n`);
         }
       }
