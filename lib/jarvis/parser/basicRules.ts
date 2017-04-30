@@ -51,7 +51,7 @@ class WatchRule extends ProcessRule {
       .flatMap(watchDefinition => {
         if (watchDefinition !== null) {
           this._dialog.say(`Watching '${name}'`);
-          const watch = new WatchJob(watchDefinition, {});
+          const watch = new WatchJob(watchDefinition, {}, this._dialog);
           return watch.execute();
         } else {
           this._dialog.report(`Watch task ${name} does not exist`);
@@ -110,7 +110,7 @@ class DynamicWatchRule extends ProcessRule {
       cmd: {cmd, cwd}
     };
 
-    const watch = new WatchJob(definition, {});
+    const watch = new WatchJob(definition, {}, this._dialog);
     const progress = watch.execute();
 
     return {

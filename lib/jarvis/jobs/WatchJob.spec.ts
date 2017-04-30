@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import {Observable, Subject, Subscriber} from 'rxjs';
 
 import {isOutput} from '../system/Process';
+import {MockIO} from '../interface/IOs';
+import Dialog from '../interface/Dialog';
 import WatchJob, {WatchExecutor} from './WatchJob';
 import ExecJob from './ExecJob';
 import {setStore, buildTestStore} from '../storage/Store';
@@ -25,10 +27,13 @@ setStore(buildTestStore(mapping => {
 
 describe('Jarvis::Jobs::WatchExecutor', () => {
 	describe('#run', () => {
+		let io: MockIO;
 		let job;
 		let executor: WatchExecutor;
 
 		beforeEach(() => {
+			io = new MockIO();
+			const dialog = new Dialog(io);
 			job = {
 				observers: [],
 				execute() {
@@ -46,15 +51,8 @@ describe('Jarvis::Jobs::WatchExecutor', () => {
 			};
 			job.observable = Observable.create((observer) => {
 				job.observers.push(observer);
-
-				// return () => {
-				// 	const i = job.observers.indexOf(observer);
-				// 	if (i >= 0) {
-				// 		job.observers.splice(i, 1);
-				// 	}
-				// }
 			});
-			executor = new WatchExecutor(job);
+			executor = new WatchExecutor(job, dialog);
 		});
 
 		it('runs the given job', () => {
@@ -111,6 +109,7 @@ describe('Jarvis::Jobs::WatchExecutor', () => {
 
 describe('Jarvis::Jobs::WatchJob', () => {
 	const watchedFilePath = `/tmp/jarvis-${Date.now()}`;
+	let io: MockIO;
 	let job: WatchJob;
 
 	beforeAll(() => {
@@ -127,33 +126,8 @@ describe('Jarvis::Jobs::WatchJob', () => {
 	});
 
 	beforeEach(() => {
-		const logWatcher = {
-			output: [],
-			log(...args) {
-				this.output.push(args);
-				if (this._resolve) {
-					this._resolve();
-				}
-			},
-			error(...args) {
-				this.output.push(args);
-				if (this._resolve) {
-					this._resolve();
-				}
-			},
-			waitForOutput(nb) {
-				return new Promise((resolve, reject) => {
-					this._resolve = () => {
-						if (this.output.length >= nb) {
-							resolve();
-						}
-					};
-					this._reject = reject;
-
-					this._resolve();
-				});
-			}
-		};
+		io = new MockIO();
+		const dialog = new Dialog(io);
 		job = new WatchJob(
 			{
 				files: watchedFilePath,
@@ -161,7 +135,8 @@ describe('Jarvis::Jobs::WatchJob', () => {
 					cmd: 'echo "job executed"'
 				}
 			},
-			{debounceTime: 50}
+			{debounceTime: 50},
+			dialog
 		);
 	});
 

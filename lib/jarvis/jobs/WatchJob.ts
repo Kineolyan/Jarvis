@@ -6,6 +6,7 @@ import * as _ from 'lodash';
 import ExecJob, {ExecDefinition} from './ExecJob';
 import Job from './Job';
 import Logger from '../interface/Logger';
+import Dialog from '../interface/Dialog';
 import {ProcessMsg, isOutput, isCompletion} from '../system/Process';
 
 interface CmdWatchDefinition {
@@ -29,7 +30,7 @@ class WatchExecutor {
 	private _pendingExecution: boolean;
 	private _subject: Subject<ProcessMsg>;
 
-	constructor(private _job: Job) {
+	constructor(private _job: Job, private _dialog: Dialog) {
 		this._subject = new Subject();
 	}
 
@@ -49,10 +50,15 @@ class WatchExecutor {
 								source: msg.source
 							});
 						} else if (isCompletion(msg)) {
+							const isSuccess = msg.code === 0;
+							const message = `[watch] completed with ${isSuccess ? 'success' : 'failure'}`;
+							// Send it with logs to keep track of the end
 							this._subject.next({
-								data: `[watch] completed with ${msg.code === 0 ? 'success' : 'failure'}`,
+								data: message,
 								source: 'out'
 							});
+							// Print it for user in console
+							this._dialog.say(message);
 						}
 					},
 					error: (err) => this.endRun(),
@@ -89,7 +95,8 @@ class WatchJob implements Job {
 			private _def: WatchDefinition,
 			options: {
 				debounceTime?: number
-			}
+			},
+			private _dialog: Dialog
 		) {
 		this._debounceTime = options.debounceTime || 250;
 	}
@@ -102,7 +109,7 @@ class WatchJob implements Job {
 		return Observable.fromPromise(this.createAction())
 			.flatMap(job => {
 				if (this._runner === undefined) {
-					const runner = new WatchExecutor(job);
+					const runner = new WatchExecutor(job, this._dialog);
 					this._runner = runner;
 					// FIXME how to stop the runner
 					const cbk = _.debounce(path => runner.run(), this._debounceTime);
