@@ -20,7 +20,7 @@ class DoLearningRule extends ProcessRule {
 			private _store: Store,
 			private _jobMgr: JobManager) {
 		super(
-			/do (?:'(.+?)'|"(.+?)"|(.+?)$)/,
+			/^\s*do (?:'(.+?)'|"(.+?)"|(.+?)$)/,
 			args => this.startProgram(args)
 		)
 	}

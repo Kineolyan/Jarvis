@@ -5,7 +5,7 @@ import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
 import {ProcessResult} from './parser/Rule';
-import {RunRule, WatchRule, QuitRule} from './parser/basicRules';
+import {RunRule, WatchRule, DynamicWatchRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
 import LearnRule from './learning/LearnRule';
 import DoLearningRule from './learning/DoLearningRule';
@@ -53,6 +53,9 @@ class Instance extends EventEmitter {
 
     this._interpreter.rules.push(new WatchRule(
       this._dialog, this._store, this._logger
+    ));
+    this._interpreter.rules.push(new DynamicWatchRule(
+      this._dialog, this._logger
     ));
 
     this._interpreter.rules.push(new LearnRule(this._dialog, this._store));

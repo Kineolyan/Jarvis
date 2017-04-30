@@ -273,6 +273,13 @@ describe('Jarvis::Instance', () => {
         'watch "this dq"',
         "watch 'that sq'"
       )
+      .addMatches('DynamicWatchRule',
+        'watch "this path/**/*" and do "echo hello world"',
+        'watch \'this path/**/*\' and do \'echo hello world\'',
+        "watch 'this path/**/*' and do 'echo hello world' in ~/some/directory",
+        'watch /path/from/root/*.json and do the-thing in "/another/path/with spaces"',
+        "watch /tmp/jarvis/*.rs and do 'cargo run' in '/another/path/with spaces'"
+      )
       .addMatches('LearnRule',
         'learn "something in dq"',
         "learn 'this sq command'",

@@ -81,7 +81,7 @@ export class JobManager {
     const jobList: string[] = [];
     this._jobs.forEach((record, key) => {
         if (record.code === undefined) {
-          jobList.push(` * ${record.description || `#${key}`} (since ${time.getTime(record.startTime)})`);
+          jobList.push(` * #${key}: ${record.description || '<unknown>'} (since ${time.getTime(record.startTime)})`);
         }
       });
 
