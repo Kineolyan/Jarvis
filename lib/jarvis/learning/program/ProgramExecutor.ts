@@ -7,7 +7,9 @@ import JobManager, {JobRecord} from '../../jobs/JobManager';
 import * as Maybe from '../../func/Maybe';
 
 import Program from './Program';
+import ExecutionManager, {Execution} from './ExecutionManager';
 
+const executionMgr: ExecutionManager = new ExecutionManager; // FIXME use real instance
 class ProgramExecutor {
   private _step: number;
   private _subject: Subject<ProcessMsg>;
@@ -44,6 +46,7 @@ class ProgramExecutor {
         throw new Error('Step job not found in the middle of the process');
       }
     } else {
+      // Complete the execution
       this._subject.next({code: 0});
       this._subject.complete();
     }
@@ -67,9 +70,18 @@ class ProgramExecutor {
         source: 'err',
         data: `Step ${this._step} of ${this._program.name} failed`
       });
+
+      const execId = executionMgr.postPone({
+        resume: this.resume
+      });
+
       this._subject.next({code: 2});
       this._subject.complete();
     }
+  }
+
+  resumeStep() {
+    
   }
 }
 
