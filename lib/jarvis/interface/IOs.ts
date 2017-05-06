@@ -51,7 +51,7 @@ interface IO {
 
 class AIO implements IO {
 	private _intf: any;
-	private _questionStack: any;
+	private _questionStack: {question: string, resolve: any}[];
 
 	constructor(
 		protected _in: NodeJS.ReadableStream,
@@ -66,21 +66,11 @@ class AIO implements IO {
 	}
 
 	prompt(message, lineFeed = true) {
-		this._out.write(message);
-		if (lineFeed) {
-			this._out.write('\n');
-		}
+		this.output(this._out, message);
 	}
 
-  private  answerQuestion(answer) {
-		const {resolve} = this._questionStack.pop();
-		resolve(answer);
-
-		if (!_.isEmpty(this._questionStack)) {
-			// Ask again the previous question
-			const {question: previousQuestion} = _.last(this._questionStack);
-			this._intf.question(previousQuestion, this.answerQuestion.bind(this));
-		}
+	report(message: string) {
+		this.output(this._out, message);
 	}
 
 	question(message) {
@@ -98,10 +88,50 @@ class AIO implements IO {
 		});
 	}
 
-	report(message: string) {
-		this._err.write(`${message}\n`);
+	private output(out: NodeJS.WritableStream, message: string) {
+		const currentQuestion = _.last(this._questionStack);
+		rl.clearLine(this._out, 0);
+		rl.cursorTo(this._out, 0);
+		if (currentQuestion) {
+			// Previous line was a question, erase
+			// Roll-up the previous question, by the number of lines
+			let nbLines = 0;
+			for (let i = 0; i < currentQuestion.question.length; i += 1) {
+				if (currentQuestion.question[i] === '\n') {
+					rl.moveCursor(this._out, 0, -1);
+					rl.clearLine(this._out, 1);
+				}
+			}
+		}
+
+		this._out.write(message);
+		this._out.write('\n');
+
+		if (currentQuestion) {
+			// Prompt last question again and set cursor after that
+			this._out.write(currentQuestion.question);
+			this._intf.write(' ');
+			this._intf.write(null, {name: 'backspace'});
+		}
 	}
 
+  private  answerQuestion(answer) {
+		const question = this._questionStack.pop();
+		if (question) {
+			const {resolve} = question;
+			resolve(answer);
+
+			if (!_.isEmpty(this._questionStack)) {
+				// Ask again the previous question
+				const {question: previousQuestion} = _.last(this._questionStack);
+				this._intf.question(previousQuestion, this.answerQuestion.bind(this));
+			}
+		} else {
+			throw new Error('No question to pop');
+		}
+	}
+
+	// TODO Move this somewhere else
 	/**
 	 * Completes the line for user.
 	 * @private
@@ -111,7 +141,7 @@ class AIO implements IO {
 	complete(line: string, cbk) {
 		Promise.all([
 			Promise.resolve([
-				'quit', 'exit', 
+				'quit', 'exit',
 				'record \'', 'record "',
 				'show logs for job '
 			]),
