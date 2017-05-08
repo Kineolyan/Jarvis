@@ -12,13 +12,15 @@ import ExecJob, {ExecDefinition} from '../jobs/ExecJob';
 
 import Program from './program/Program';
 import ProgramExecutor from './program/ProgramExecutor';
+import ExecutionManager from './program/ExecutionManager';
 
 class DoLearningRule extends ProcessRule {
 
 	constructor(
 			private _dialog: Dialog,
 			private _store: Store,
-			private _jobMgr: JobManager) {
+			private _jobMgr: JobManager,
+			private _executionMgr: ExecutionManager) {
 		super(
 			/^\s*do (?:'(.+?)'|"(.+?)"|(.+?)$)/,
 			args => this.startProgram(args)
@@ -48,7 +50,12 @@ class DoLearningRule extends ProcessRule {
 
 	executeProgram(name: string, program: Maybe.Type<Program>): Observable<ProcessMsg> {
 		if (Maybe.isDefined(program)) {
-			const executor = new ProgramExecutor(program, this._jobMgr);
+			const executor = new ProgramExecutor(
+				program,
+				this._jobMgr,
+				this._executionMgr,
+				this._dialog
+			);
 			return executor.execute();
 		} else {
 			this._dialog.report(`Program ${name} does not exist`);

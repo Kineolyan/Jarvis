@@ -4,7 +4,7 @@ import { IO } from './IOs';
  * Facade providing methods to enable dialogs between a user and the IA.
  * This acts from the point of view of the IA
  */
-export class Dialog {
+class Dialog {
 	private _name: string;
 
 	/**

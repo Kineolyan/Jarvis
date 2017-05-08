@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import {Subject} from 'rxjs';
 
+import Dialog from './../../interface/Dialog';
 import {ProcessMsg, Process} from '../../system/Process';
 import ExecJob, {ExecDefinition} from '../../jobs/ExecJob';
 import JobManager, {JobRecord} from '../../jobs/JobManager';
@@ -9,12 +10,15 @@ import * as Maybe from '../../func/Maybe';
 import Program from './Program';
 import ExecutionManager, {Execution} from './ExecutionManager';
 
-const executionMgr: ExecutionManager = new ExecutionManager; // FIXME use real instance
 class ProgramExecutor {
   private _step: number;
   private _subject: Subject<ProcessMsg>;
 
-  constructor(private _program: Program, private _jobMgr: JobManager) {
+  constructor(
+      private _program: Program,
+      private _jobMgr: JobManager,
+      private _executionMgr: ExecutionManager,
+      private _dialog: Dialog) {
     this._step = -1;
   }
 
@@ -65,23 +69,31 @@ class ProgramExecutor {
 
       this.runNextStep();
     } else {
-      // TODO offer some way to resume the operation from here
       this._subject.next({
         source: 'err',
         data: `Step ${this._step} of ${this._program.name} failed`
       });
 
-      const execId = executionMgr.postPone({
-        resume: this.resume
+      const execId = this._executionMgr.postPone({
+        resume: this.resumeStep.bind(this)
       });
-
-      this._subject.next({code: 2});
-      this._subject.complete();
+      this._dialog.say(`Execution of ${this._program.name} stopped at step ${this._step}. Resume execution ${execId} to continue.`);
     }
   }
 
   resumeStep() {
-    
+    const step = this._program.steps[this._step];
+    const execution = new ExecJob(step).execute();
+    const jobId = this._jobMgr.registerJob(execution, `Step ${this._step} of program ${this._program.name} (reboot)`);
+    const job = this._jobMgr.getJob(jobId);
+    if (job) {
+      job.completion.then(
+        report => this.completeStep(report),
+        err => this.failExecution(err)
+      );
+    } else {
+      throw new Error('Step job not found in the middle of the process');
+    }
   }
 }
 
