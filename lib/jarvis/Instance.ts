@@ -9,6 +9,7 @@ import {RunRule, WatchRule, DynamicWatchRule, QuitRule} from './parser/basicRule
 import {RecordRule, ClearRule} from './parser/autoRules';
 import LearnRule from './learning/LearnRule';
 import DoLearningRule from './learning/DoLearningRule';
+import ResumeLearningRule from './learning/ResumeLearningRule';
 import ExecutionManager from './learning/program/ExecutionManager';
 import {JobsRule, JobLogRule} from './parser/jobRules';
 import JobManager from './jobs/JobManager';
@@ -45,27 +46,24 @@ class Instance extends EventEmitter {
     this._executionMgr = new ExecutionManager();
     this._interpreter = new Interpreter<ProcessResult>();
 
-    this._interpreter.rules.push(new RunRule(this._dialog, this._logger));
-    this._interpreter.rules.push(new QuitRule(() => this.quit()));
-
-    this._interpreter.rules.push(new RecordRule(this._dialog, this._store));
-    this._interpreter.rules.push(new ClearRule(this._dialog, this._store));
-
-    this._interpreter.rules.push(new JobsRule(this._jobMgr));
-    this._interpreter.rules.push(new JobLogRule(this._jobMgr, this._dialog));
-
-    this._interpreter.rules.push(new WatchRule(
-      this._dialog, this._store, this._logger
-    ));
-    this._interpreter.rules.push(new DynamicWatchRule(
-      this._dialog, this._logger
-    ));
-
-    this._interpreter.rules.push(new LearnRule(this._dialog, this._store));
     this._interpreter.rules.push(
+      new RunRule(this._dialog, this._logger),
+      new QuitRule(() => this.quit()),
+
+      new RecordRule(this._dialog, this._store),
+      new ClearRule(this._dialog, this._store),
+
+      new JobsRule(this._jobMgr),
+      new JobLogRule(this._jobMgr, this._dialog),
+
+      new WatchRule(this._dialog, this._store, this._logger),
+      new DynamicWatchRule(this._dialog, this._logger),
+
+      new LearnRule(this._dialog, this._store),
       new DoLearningRule(
         this._dialog, this._store, this._jobMgr, this._executionMgr
-      )
+      ),
+      new ResumeLearningRule(this._executionMgr)
     );
 
     this._completion = new Subject<void>();

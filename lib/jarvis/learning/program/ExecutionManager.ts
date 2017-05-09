@@ -12,6 +12,10 @@ class ExecutionManager {
     this._executions = new Map();
   }
 
+  has(executionId: ExecutionId): boolean {
+    return this._executions.has(executionId);
+  }
+
   postPone(execution: Execution): ExecutionId {
     const execId = ++this._nextId;
     this._executions.set(execId, execution);

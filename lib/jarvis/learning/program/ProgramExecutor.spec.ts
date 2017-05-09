@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import * as fs from 'fs';
 
 import {MockIO} from '../../interface/IOs';
 import Dialog from '../../interface/Dialog';
@@ -7,14 +8,23 @@ import {isCompletion, ProcessCompletion} from '../../system/Process';
 
 import ProgramExecutor from './ProgramExecutor';
 import Program from './Program';
+import ExecutionManager from './ExecutionManager';
 
 describe('Jarvis::learning::program::ProgramExecutor', () => {
   let jobMgr: JobManager;
+  let executionMgr: ExecutionManager;
+  let dialog: Dialog;
 	let io: MockIO;
+
+  function createExecutor(program: Program) {
+    return new ProgramExecutor(program, jobMgr, executionMgr, dialog);
+  }
 
   beforeEach(() => {
     io = new MockIO();
-    jobMgr = new JobManager(new Dialog(io));
+    dialog = new Dialog(io);
+    jobMgr = new JobManager(dialog);
+    executionMgr = new ExecutionManager();
   });
 
   describe('#execute', () => {
@@ -30,7 +40,8 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
           }
         ]
       };
-      const executor = new ProgramExecutor(program, jobMgr);
+
+      const executor = createExecutor(program);
       return executor.execute()
         .toPromise()
         .then(msg => {
@@ -39,8 +50,9 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
           expect(result.code).to.eql(0);
         });
     });
-     
-    it.skip('runs the program to the first failure', () => {
+
+    describe('with failure', () => {
+      const SOME_FILE = '/tmp/casa';
       const program: Program = {
         name: "explore",
         steps: [
@@ -48,7 +60,7 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
             "cmd": "ls /"
           },
           {
-            "cmd": "ls /casa"
+            "cmd": `ls ${SOME_FILE}`
           },
           {
             "cmd": "ls ",
@@ -56,6 +68,23 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
           }
         ]
       };
+
+      beforeEach(() => new Promise((reject, resolve) => {
+        fs.stat(SOME_FILE, err => {
+          if (!err) {
+            fs.unlink(SOME_FILE, delErr => {
+              delErr ? reject(delErr) : resolve(delErr);
+            });
+          }
+          resolve();
+        });
+      }));
+
+      it('runs the program to the first failure', () => {
+        const executor = createExecutor(program);
+        return executor.execute()
+
+      });
     });
   });
 
