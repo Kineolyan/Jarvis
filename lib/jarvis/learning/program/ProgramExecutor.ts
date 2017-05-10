@@ -64,18 +64,18 @@ class ProgramExecutor {
     if (report.code === 0) {
       this._subject.next({
         source: 'out',
-        data: `Step ${this._step} od ${this._program.name} completed with success`
+        data: `Step ${this._step} of ${this._program.name} completed with success`
       });
 
       this.runNextStep();
     } else {
-      this._subject.next({
-        source: 'err',
-        data: `Step ${this._step} of ${this._program.name} failed`
-      });
-
       const execId = this._executionMgr.postPone({
         resume: this.resumeStep.bind(this)
+      });
+
+      this._subject.next({
+        source: 'err',
+        data: `Step ${this._step} of ${this._program.name} failed. Resume execution ${execId} to continue.`
       });
       this._dialog.say(`Execution of ${this._program.name} stopped at step ${this._step}. Resume execution ${execId} to continue.`);
     }

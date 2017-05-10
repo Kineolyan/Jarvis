@@ -15,7 +15,7 @@ class ResumeLearningRule extends ProcessRule {
 		const executionId = parseInt(args[1]);
 		let progress;
 		if (this._executionMgr.has(executionId)) {
-			this._executionMgr.has(executionId);
+			this._executionMgr.resume(executionId);
 			progress = Process.success();
 		} else {
 			progress = Process.error(1);

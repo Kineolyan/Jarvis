@@ -25,6 +25,7 @@ class ExecutionManager {
 
   resume(executionId: ExecutionId) {
     const execution = this._executions.get(executionId);
+    console.log('exec', executionId, execution);
     if (execution) {
       this._executions.delete(executionId);
       execution.resume();
