@@ -37,6 +37,10 @@ class ProgramExecutor {
     const nextStep = this._step + 1;
     if (nextStep < this._program.steps.length) {
       const step = this._program.steps[nextStep];
+      // if (nextStep === 2) {
+      //   console.log('stopping before the end', step);
+      //   return;
+      // }
       const execution = new ExecJob(step).execute();
       const jobId = this._jobMgr.registerJob(execution, `Step ${nextStep} of program ${this._program.name}`);
       const job = this._jobMgr.getJob(jobId);
@@ -67,7 +71,9 @@ class ProgramExecutor {
         data: `Step ${this._step} of ${this._program.name} completed with success`
       });
 
-      this.runNextStep();
+      // if (!(report.description || '').includes('reboot')) {
+        this.runNextStep();
+      // }
     } else {
       const execId = this._executionMgr.postPone({
         resume: this.resumeStep.bind(this)

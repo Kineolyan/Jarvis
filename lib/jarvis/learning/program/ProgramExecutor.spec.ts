@@ -64,54 +64,46 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
             "cmd": `ls ${SOME_FILE}`
           },
           {
-            "cmd": "ls ",
-            "cwd": "/Users/oliv/projects/jarvis"
+            "cmd": "ls ."
           }
         ]
       };
 
-      beforeEach(() => new Promise((reject, resolve) => {
-        fs.stat(SOME_FILE, err => {
+      const clearFile = () => new Promise((resolve, reject) => {
+        fs.stat(SOME_FILE, (err, s) => {
           if (!err) {
             fs.unlink(SOME_FILE, delErr => {
-              delErr ? reject(delErr) : resolve(delErr);
+              delErr ? reject(delErr) : resolve();
             });
+          } else if (err.code === 'ENOENT') {
+            resolve();
+          } else {
+            reject(err);
           }
-          resolve();
         });
-      }));
+      });
 
       it('runs the program to the first failure', () => {
         const executor = createExecutor(program);
-        return executor.execute()
-          .map((msg: ProcessMsg) => {
-            if (isOutput(msg) && msg.source === 'err' && /Step 1 .* failed/.test(msg.data)) {
-              const expr = /Resume execution (\d+) to continue./;
-              expect(msg.data).to.match(expr);
+        return clearFile()
+          .then(() => {
+            return executor.execute()
+            .map((msg: ProcessMsg) => {
+              if (isOutput(msg) && msg.source === 'err' && /Step 1 .* failed/.test(msg.data)) {
+                const expr = /Resume execution (\d+) to continue./;
+                expect(msg.data).to.match(expr);
 
-              const executionId: number = parseInt(expr.exec(msg.data)[1], 10);
-              expect(executionMgr.has(executionId)).to.eql(true, `No execution with id ${executionId}`);
-              console.log('coucou', msg);
+                const executionId: number = parseInt(expr.exec(msg.data)[1], 10);
+                expect(executionMgr.has(executionId)).to.eql(true, `No execution with id ${executionId}`);
 
-            // //   return Observable.create((observer) => {
-            // //     fs.writeFile(SOME_FILE, 'something', writeErr => {
-            // //       if (writeErr) {
-            // //         observer.error(writeErr);
-            // //       } else {
-            // //         executionMgr.resume(executionId);
-            // //         observer.next(msg);
-            // //         observer.complete();
-            // //       }
-            // //     });
-            // //   });
-              fs.writeFileSync(SOME_FILE, 'something');
-              console.log('execMgr', executionMgr);
-              // executionMgr.resume(executionId);
-            }
-            return msg;
-          })
-          .reduce((aggregates, message) => [...aggregates, message], [])
-          .toPromise()
+                fs.writeFileSync(SOME_FILE, 'something');
+                executionMgr.resume(executionId);
+              }
+              return msg;
+            })
+            .reduce((aggregates, message) => [...aggregates, message], [])
+            .toPromise();}
+          )
           .then(messages => {
             const result = messages.pop();
             expect(isCompletion(result)).to.eql(true, 'Last message of completion type');
