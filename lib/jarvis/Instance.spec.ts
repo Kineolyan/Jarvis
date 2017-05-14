@@ -292,9 +292,15 @@ describe('Jarvis::Instance', () => {
         "do 'something else than expected'",
         'do clean "because i care"'
       )
+      .addMatches('ResumeLearningRule',
+        'resume 4250',
+        'resume execution 753',
+        'resume execution of 674302'
+      )
       .addTraps(
         'should not try to learn this',
         'you may be tempted to run "this statement"',
+        'resume execution of not-a-exec-id'
       )
       .runTests();
   });

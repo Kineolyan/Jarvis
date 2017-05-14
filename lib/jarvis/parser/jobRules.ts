@@ -8,7 +8,7 @@ import Process from '../system/Process';
 class JobsRule extends ProcessRule {
 	constructor(private _jobMgr: JobManager) {
 		super(
-			/^jobs\s*$/,
+			/^(?:(?:show|list) )?jobs\s*$/,
 			args => this.printJobs()
 		)
 	}
