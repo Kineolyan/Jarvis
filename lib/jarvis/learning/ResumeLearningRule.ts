@@ -6,13 +6,13 @@ import ExecutionManager from './program/ExecutionManager';
 class ResumeLearningRule extends ProcessRule {
 	constructor(private _executionMgr: ExecutionManager){
 		super(
-			/^\s*resume (?:execution (:?of )?)?(\d+)\s*$/,
+			/^\s*resume (?:execution (?:of )?)?(\d+)\s*$/,
 			args => this.resumeLearning(args)
 		);
 	}
 
 	resumeLearning(args) {
-		const executionId = parseInt(args[1]);
+		const executionId = parseInt(args[1], 10);
 		let progress;
 		if (this._executionMgr.has(executionId)) {
 			this._executionMgr.resume(executionId);
