@@ -1,4 +1,5 @@
-import {spawn} from 'child_process';
+import {spawn, ChildProcess} from 'child_process';
+import * as fs from 'fs';
 import { Observable, Subject } from 'rxjs';
 
 interface ProcessOptions {
@@ -22,11 +23,24 @@ function isCompletion(msg: ProcessMsg): msg is ProcessCompletion {
 
 interface Process extends Observable<ProcessMsg> {}
 
+/**
+ * Safely spawn a process, checking its cwd
+ */
+function spawnProcess(cmd, args, opts): Promise<ChildProcess> {
+	return new Promise((resolve, reject) => {
+			const cwd = opts.cwd || process.cwd();
+			// Check that the cwd exist, otherwise spawn fails
+			fs.stat(cwd, err => {
+				err
+					? reject(new Error(`Process cwd ${cwd} does not exist`))
+					: resolve();
+			});
+		})
+		.then(() => spawn(cmd, args, opts));
+}
+
 function execute(cmd: string, args: string[], options: ProcessOptions): Observable<ProcessMsg> {
 	const processObs = Observable.create(function subscribe(observer) {
-		const opts = {...options, shell: true};
-		const process = spawn(cmd, args, opts);
-
 		const forwardData: (string) => ((string) => void) =
 			source => data => {
 			const msg: ProcessOutput = {
@@ -36,19 +50,25 @@ function execute(cmd: string, args: string[], options: ProcessOptions): Observab
 			observer.next(msg);
 		};
 
-		process.stdout.on('data', forwardData('out'));
-		process.stderr.on('data', forwardData('err'));
+		const opts = {...options, shell: true};
+		const process_ = spawnProcess(cmd, args, opts);
+		process_
+			.catch(err => observer.error(err))
+			.then(process => {
+				process.stdout.on('data', forwardData('out'));
+				process.stderr.on('data', forwardData('err'));
 
-		process.on('close', (code) => {
-			const endMsg: ProcessCompletion = {
-				code
-			};
-			observer.next(endMsg);
-			observer.complete();
-		});
+				process.on('close', (code) => {
+					const endMsg: ProcessCompletion = {
+						code
+					};
+					observer.next(endMsg);
+					observer.complete();
+				});
+			});
 
 		return function unsubscribe() {
-			process.kill('SIGINT');
+			process_.then(process => process.kill('SIGINT'));
 		};
 	});
 
