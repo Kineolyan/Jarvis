@@ -83,7 +83,7 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
         });
       });
 
-      it('runs the program to the first failure', () => {
+      it.only('runs the program to the first failure', () => {
         const executor = createExecutor(program);
         return clearFile()
           .then(() => {
@@ -115,11 +115,19 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
                 data.push(msg.data);
               }
             }
-            expect(data).to.have.length(4);
-            expect(data[0]).to.match(/Step 0 .* success/);
-            expect(data[1]).to.match(/Step 1 .* failed/);
-            expect(data[2]).to.match(/Step 1 .* success/);
-            expect(data[3]).to.match(/Step 2 .* success/);
+
+            const matches = [
+              /Step 0 execution .* job \d+/,
+              /Step 0 .* success/,
+              /Step 1 execution .* job \d+/,
+              /Step 1 .* failed/,
+              /Step 1 execution .* job \d+/,
+              /Step 1 .* success/,
+              /Step 2 execution .* job \d+/,
+              /Step 2 .* success/
+            ];
+            expect(data).to.have.length(matches.length);
+            matches.forEach((expr, i) => expect(data[i]).to.match(expr));
           });
       });
     });

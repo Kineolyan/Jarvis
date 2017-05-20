@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Subject} from 'rxjs';
+import { Subject, ReplaySubject, Scheduler } from 'rxjs';
 
 import Dialog from './../../interface/Dialog';
 import {ProcessMsg, Process} from '../../system/Process';
@@ -27,28 +27,16 @@ class ProgramExecutor {
       throw new Error('Process already started');
     }
 
-    this._subject = new Subject<ProcessMsg>();
+    this._subject = new ReplaySubject<ProcessMsg>(5);
     this.runNextStep();
 
-    return this._subject;
+    return this._subject.observeOn(Scheduler.async);
 	}
 
   runNextStep() {
     const nextStep = this._step + 1;
     if (nextStep < this._program.steps.length) {
-      const step = this._program.steps[nextStep];
-      const execution = new ExecJob(step).execute();
-      const jobId = this._jobMgr.registerJob(execution, `Step ${nextStep} of program ${this._program.name}`);
-      const job = this._jobMgr.getJob(jobId);
-      if (job) {
-        this._step = nextStep;
-        job.completion.then(
-          report => this.completeStep(report),
-          err => this.failExecution(err)
-        );
-      } else {
-        throw new Error('Step job not found in the middle of the process');
-      }
+      this.runStep(nextStep);
     } else {
       // Complete the execution
       this._subject.next({code: 0});
@@ -67,9 +55,7 @@ class ProgramExecutor {
         data: `Step ${this._step} of ${this._program.name} completed with success`
       });
 
-      // if (!(report.description || '').includes('reboot')) {
-        this.runNextStep();
-      // }
+      this.runNextStep();
     } else {
       const execId = this._executionMgr.postPone({
         resume: this.resumeStep.bind(this)
@@ -84,11 +70,20 @@ class ProgramExecutor {
   }
 
   resumeStep() {
-    const step = this._program.steps[this._step];
+    this.runStep(this._step);
+  }
+
+  runStep(stepIdx: number) {
+    const step = this._program.steps[stepIdx];
     const execution = new ExecJob(step).execute();
-    const jobId = this._jobMgr.registerJob(execution, `Step ${this._step} of program ${this._program.name} (reboot)`);
+    const jobId = this._jobMgr.registerJob(execution, `Step ${stepIdx} of program ${this._program.name}`);
+    this._subject.next({
+      source: 'out',
+      data: `Step ${stepIdx} execution registered as job ${jobId}`
+    });
     const job = this._jobMgr.getJob(jobId);
     if (job) {
+      this._step = stepIdx;
       job.completion.then(
         report => this.completeStep(report),
         err => this.failExecution(err)
@@ -96,6 +91,7 @@ class ProgramExecutor {
     } else {
       throw new Error('Step job not found in the middle of the process');
     }
+
   }
 }
 
