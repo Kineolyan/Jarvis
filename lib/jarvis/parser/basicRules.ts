@@ -94,30 +94,43 @@ class WatchRule extends ProcessRule {
 class DynamicWatchRule extends ProcessRule {
 	constructor(private _dialog: Dialog, private _logger: Logger) {
 		super(
-      /^watch ('.+?'|".+?"|[^ ]+) and do ('.+'|".+"|.+$)(?: in ('.+'|".+"|.+$))?/,
+      /^watch ('.+?'|".+?"|[^ ]+) and do (?:('.+'|".+")(?: in ('.+'|".+"|.+$))?|(.+$))/,
       args => this.startWatching(args)
     );
 	}
 
   startWatching(args): ProcessResult {
-    const directory = ProcessRule.getQuotedArg(args[1]);
-    const cmd = ProcessRule.getQuotedArg(args[2]);
-    const cwd = args[3] 
-      ? ProcessRule.getQuotedArg(args[3])
-      : process.cwd();
-    const definition: CmdWatchDefinition = {
-      files: directory,
-      cmd: {cmd, cwd}
-    };
-
+    const definition = this.getDefinition(args);
     const watch = new WatchJob(definition, {}, this._dialog);
     const progress = watch.execute();
 
     return {
       asynchronous: true,
       progress,
-      description: `watching ${directory} and doing ${cmd}`
+      description: `watching ${definition.files} and doing ${definition.cmd.cmd}`
     };
+  }
+
+  getDefinition(args): CmdWatchDefinition {
+    const directory = ProcessRule.getQuotedArg(args[1]);
+    let cmd, cwd;
+    if (args[4]) {
+      const parts = args[4].split(/\s*in\s*/);
+      cmd = parts[0];
+      cwd = this.getCommandPath(parts[1]);
+    } else {
+      cmd = ProcessRule.getQuotedArg(args[2]);
+      cwd = this.getCommandPath(args[3]);
+    }
+
+    return {
+      files: directory,
+      cmd: {cmd, cwd}
+    };
+  }
+
+  private getCommandPath(value?: string): string {
+    return value ? ProcessRule.getQuotedArg(value) : process.cwd();
   }
 }
 
