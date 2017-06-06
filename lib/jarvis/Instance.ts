@@ -1,6 +1,7 @@
 import {EventEmitter} from 'events';
 import {Observable, Subject} from 'rxjs';
 
+import {isOutput, isCompletion} from './system/Process';
 import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
@@ -79,6 +80,43 @@ class Instance extends EventEmitter {
 
     this.run();
     return this._completion;
+  }
+
+  doAction(input: string): Promise<number> {
+    console.log('doing', input);
+    const result = this._interpreter.interpret(input);
+    if (Maybe.isDefined(result)) {
+      if (result.progress !== undefined) {
+        const process = result.progress;
+        return new Promise((resolve, reject) => {
+          try {
+            process.subscribe({
+              next: message => {
+                if (isOutput(message)) {
+                  if (message.source === 'out') {
+                    this._dialog.say(message.data);
+                  } else {
+                    this._dialog.report(message.data);
+                  }
+                } else if (isCompletion(message)) {
+                  resolve(message.code);
+                } else {
+                  console.error(`Unknown message`, message);
+                }
+              },
+              error: err => reject(err)
+            });
+          } catch (err) {
+            return reject(err);
+          }
+        });
+      } else {
+        return Promise.resolve(0);
+      }
+    } else {
+      this._dialog.report('Unknown action');
+      return Promise.resolve(1);
+    }
   }
 
   run() {
