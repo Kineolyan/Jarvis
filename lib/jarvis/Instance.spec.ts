@@ -253,7 +253,8 @@ describe('Jarvis::Instance', () => {
       .addMatches('RunRule',
         'run "jarvis in the space"',
         "run 'summer after spring'",
-        'run "learn \'something\'"'
+        'run "learn \'something\'"',
+        'run the one and only rule'
       )
       .addMatches('QuitRule', 'quit', 'exit')
       .addMatches('RecordRule',
