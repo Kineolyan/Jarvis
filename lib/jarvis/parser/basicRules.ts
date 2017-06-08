@@ -11,13 +11,13 @@ import Process from '../system/Process';
 class RunRule extends ProcessRule {
 	constructor(private _dialog: Dialog, private _logger: Logger) {
 		super(
-      /^run (?:'(.+?)'|"(.+?)")/,
+      /^run ('.+?'|".+?"|.+$)/,
       args => this.runJob(args)
     );
 	}
 
   runJob(args: any): ProcessResult {
-    const name = args[1];
+    const name = ProcessRule.getQuotedArg(args[1]);
     const progress = Observable.fromPromise(ExecJob.create(name))
       .flatMap(job => {
         if (job !== undefined) {
