@@ -301,7 +301,12 @@ describe('Jarvis::Instance', () => {
       .addMatches('ShowLearningRule',
         'show me your learning',
         'list learning',
-        'brag about your learning'
+	'brag about your learning'
+      )
+      .addMatches('Plexify',
+        'plexify serie "Silicon Valley" "path/to/episode"',
+        'plexify serie "Silicon Valley" "first/path" "other/path"',
+        'plexify serie NoSpaceSerie file1 "file2" file3'
       )
       .addTraps(
         'should not try to learn this',

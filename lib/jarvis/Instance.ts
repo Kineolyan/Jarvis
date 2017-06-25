@@ -6,18 +6,20 @@ import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
 import {ProcessResult} from './parser/Rule';
-import {RunRule, WatchRule, DynamicWatchRule, QuitRule} from './parser/basicRules';
-import {RecordRule, ClearRule} from './parser/autoRules';
-import LearnRule from './learning/LearnRule';
-import DoLearningRule, {ShowLearningRule} from './learning/DoLearningRule';
-import ResumeLearningRule from './learning/ResumeLearningRule';
 import ExecutionManager from './learning/program/ExecutionManager';
-import {JobsRule, JobLogRule} from './parser/jobRules';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
 import Store, {buildDefaultStore, setStore} from './storage/Store'; // FIXME stop using singleton
 import { IO } from './interface/IOs';
 import * as Maybe from './func/Maybe';
+
+import {RunRule, WatchRule, DynamicWatchRule, QuitRule} from './parser/basicRules';
+import {RecordRule, ClearRule} from './parser/autoRules';
+import {JobsRule, JobLogRule} from './parser/jobRules';
+import LearnRule from './learning/LearnRule';
+import DoLearningRule, {ShowLearningRule} from './learning/DoLearningRule';
+import ResumeLearningRule from './learning/ResumeLearningRule';
+import {Plexify} from './3rd-parties/plex/plexRules';
 
 /**
  * The main class of the project starting everything
@@ -65,7 +67,9 @@ class Instance extends EventEmitter {
         this._dialog, this._store, this._jobMgr, this._executionMgr
       ),
       new ShowLearningRule(this._dialog, this._store),
-      new ResumeLearningRule(this._executionMgr)
+      new ResumeLearningRule(this._executionMgr),
+
+      new Plexify(this._dialog)
     );
 
     this._completion = new Subject<void>();
