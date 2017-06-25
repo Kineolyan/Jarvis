@@ -14,10 +14,19 @@ function app(name) {
   jarvis.start();
 }
 
+function quoteArgIfNeeded(arg: string): string {
+  if (arg.includes(' ')) {
+    return `'${arg.replace(/'/g, "\\\\'")}'`;
+  } else {
+    return arg;
+  }
+}
+
 function cli(name: string, args: string[]): void {
   const jarvis = createInstance(name);
   const action = args
-    .filter(arg => !/-[a-zA-Z]|--\w+/.test(arg))
+    .filter(arg => !/^-[a-zA-Z]|--\w+/.test(arg))
+    .map(quoteArgIfNeeded)
     .join(' ');
   jarvis.doAction(action)
     .then(
