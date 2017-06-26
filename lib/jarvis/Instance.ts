@@ -9,7 +9,7 @@ import {ProcessResult} from './parser/Rule';
 import {RunRule, WatchRule, DynamicWatchRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
 import LearnRule from './learning/LearnRule';
-import DoLearningRule from './learning/DoLearningRule';
+import DoLearningRule, {ShowLearningRule} from './learning/DoLearningRule';
 import ResumeLearningRule from './learning/ResumeLearningRule';
 import ExecutionManager from './learning/program/ExecutionManager';
 import {JobsRule, JobLogRule} from './parser/jobRules';
@@ -64,6 +64,7 @@ class Instance extends EventEmitter {
       new DoLearningRule(
         this._dialog, this._store, this._jobMgr, this._executionMgr
       ),
+      new ShowLearningRule(this._dialog, this._store),
       new ResumeLearningRule(this._executionMgr)
     );
 

@@ -298,6 +298,11 @@ describe('Jarvis::Instance', () => {
         'resume execution 753',
         'resume execution of 674302'
       )
+      .addMatches('ShowLearningRule',
+        'show me your learning',
+        'list learning',
+        'brag about your learning'
+      )
       .addTraps(
         'should not try to learn this',
         'you may be tempted to run "this statement"',

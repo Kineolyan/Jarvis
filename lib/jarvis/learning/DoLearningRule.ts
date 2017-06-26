@@ -67,4 +67,33 @@ class DoLearningRule extends ProcessRule {
 
 }
 
+class ShowLearningRule extends ProcessRule {
+
+	constructor(
+			private _dialog: Dialog,
+			private _store: Store) {
+		super(
+			/^\s*(?:(?:show|list)(?: me your)?|brag about your) learning$/,
+			args => this.showLearning()
+		)
+	}
+
+	showLearning() {
+		const progress = this._store.get('programs')
+			.then(programs => {
+				const keys = Object.keys(programs);
+				this._dialog.say(`I learned:\n${keys.map(k => ` * ${k}`).join('\n')}`);
+			});
+
+		return {
+			asynchronous: false,
+			progress: Process.fromPromise(progress)
+		};
+	}
+
+}
+
 export default DoLearningRule;
+export {
+	ShowLearningRule
+}
