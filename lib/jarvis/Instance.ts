@@ -84,7 +84,6 @@ class Instance extends EventEmitter {
   }
 
   doAction(input: string): Promise<number> {
-    console.log('doing', input);
     const result = this._interpreter.interpret(input);
     if (Maybe.isDefined(result)) {
       if (result.progress !== undefined) {
