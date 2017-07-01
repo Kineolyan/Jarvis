@@ -308,6 +308,10 @@ describe('Jarvis::Instance', () => {
         'plexify serie "Silicon Valley" "first/path" "other/path"',
         'plexify serie NoSpaceSerie file1 "file2" file3'
       )
+      .addMatches('PurifyPlex',
+        'purify plex',
+        'purify plex      '
+      )
       .addTraps(
         'should not try to learn this',
         'you may be tempted to run "this statement"',

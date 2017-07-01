@@ -84,6 +84,25 @@ class Plexify extends ProcessRule {
   }
 }
 
+
+class PurifyPlex extends ProcessRule {
+	constructor() {
+		super(
+      /^purify plex\s*$/,
+      () => this.purify()
+    );
+	}
+
+  purify(): ProcessResult {
+    return {
+      asynchronous: true,
+      progress: Process.fromPromise(plex.purify()),
+      description: 'Purifying plex repository'
+    };
+  }
+}
+
 export {
-  Plexify
+  Plexify,
+  PurifyPlex
 };

@@ -19,7 +19,7 @@ import {JobsRule, JobLogRule} from './parser/jobRules';
 import LearnRule from './learning/LearnRule';
 import DoLearningRule, {ShowLearningRule} from './learning/DoLearningRule';
 import ResumeLearningRule from './learning/ResumeLearningRule';
-import {Plexify} from './3rd-parties/plex/plexRules';
+import {Plexify, PurifyPlex} from './3rd-parties/plex/plexRules';
 
 /**
  * The main class of the project starting everything
@@ -69,7 +69,8 @@ class Instance extends EventEmitter {
       new ShowLearningRule(this._dialog, this._store),
       new ResumeLearningRule(this._executionMgr),
 
-      new Plexify(this._dialog)
+      new Plexify(this._dialog),
+      new PurifyPlex()
     );
 
     this._completion = new Subject<void>();

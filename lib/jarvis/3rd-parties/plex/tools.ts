@@ -23,9 +23,15 @@ const toPromise = f => (...args) => new Promise((resolve, reject) => {
 const access = toPromise(fs.access);
 //*
 const symlink: (...any) => Promise<any> = toPromise(fs.symlink);
+const unlink: (string) => Promise<any> = toPromise(fs.unlink);
+const rmdir: (string) => Promise<any> = toPromise(fs.rmdir);
 /*/
 const symlink = (from, to) => new Promise(r => {
 	console.log('linking', from, '->', to);
+	r();
+});
+const unlink: (string) => Promise<any> = dirPath => new Promise(r => {
+	console.log('unlinking', dirPath);
 	r();
 });
 //*/
@@ -39,6 +45,9 @@ const mkdir: (string) => Promise<any> = (dirPath) => rawMkdir(dirPath)
 			return Promise.reject(err);
 		}
 	});
+const readdir: (string) => Promise<string[]> = toPromise(fs.readdir);
+const lstat: (string) => Promise<any> = toPromise(fs.lstat);
+const readlink: (string) => Promise<string> = toPromise(fs.readlink);
 
 function ensureFolder(folder: string): Promise<any> {
 	return access(folder, fs.constants.F_OK)
@@ -95,10 +104,56 @@ function organize(serie: string, mapping: {[file: string]: SerieMetadata}): Prom
 		));
 }
 
+function purifyLink(filePath: string) {
+	return readlink(filePath)
+		.then(realPath => lstat(realPath)
+			.catch(() => unlink(filePath)));
+}
+
+function removeDeadLinks(dirPath: string): Promise<any> {
+	return readdir(dirPath)
+		.then(entries => Promise.all(
+			entries.map(entry => {
+				const entryPath = path.join(dirPath, entry);
+				return lstat(entryPath)
+					.then(entryStat => {
+						if (entryStat.isSymbolicLink()) {
+							return purifyLink(entryPath);
+						} else if (entryStat.isDirectory()) {
+							return removeDeadLinks(entryPath)
+						} else {
+							return Promise.resolve();
+						}
+					});
+			})));
+}
+
+function removeEmptySeasons(): Promise<any> {
+	return readdir(plexPath())
+		.then(series => Promise.all(
+			series.map(serie => readdir(plexPath(serie))
+				.then(seasons => seasons.map(season => path.join(plexPath(serie, season)))))
+		))
+		.then(results => {
+			const allSeasons = results.reduce((list, items) => list.concat(items), []);
+			return Promise.all(
+				allSeasons.map(seasonPath => readdir(seasonPath)
+					.then(episodeList => episodeList.length === 0
+						? rmdir(seasonPath)
+						: Promise.resolve())));
+		});
+}
+
+function purify(): Promise<any> {
+	return removeDeadLinks(plexPath())
+		.then(() => removeEmptySeasons());
+}
+
 export {
 	// Types
 	SerieMetadata,
 	// Functions
 	guessEpisode,
-	organize
+	organize,
+	purify
 };
