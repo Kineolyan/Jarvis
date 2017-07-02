@@ -16,7 +16,6 @@ class Plexify extends ProcessRule {
 	}
 
   organizeEpisodes(args: any): ProcessResult {
-    console.log('--->', args);
     const serie = ProcessRule.getQuotedArg(args[1]);
     const episodes = this.extractEpisodes(args[2]);
 
