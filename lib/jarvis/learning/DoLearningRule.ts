@@ -12,6 +12,7 @@ import ExecJob, {ExecDefinition} from '../jobs/ExecJob';
 
 import Program from './program/Program';
 import ProgramExecutor from './program/ProgramExecutor';
+import RecoveryManager from './recovery/RecoveryManager';
 import ExecutionManager from './program/ExecutionManager';
 
 class DoLearningRule extends ProcessRule {
@@ -20,7 +21,8 @@ class DoLearningRule extends ProcessRule {
 			private _dialog: Dialog,
 			private _store: Store,
 			private _jobMgr: JobManager,
-			private _executionMgr: ExecutionManager) {
+			private _executionMgr: ExecutionManager,
+			private _recoveryMgr: RecoveryManager) {
 		super(
 			/^\s*do (?:'(.+?)'|"(.+?)"|(.+?)$)/,
 			args => this.startProgram(args)
@@ -54,6 +56,7 @@ class DoLearningRule extends ProcessRule {
 				program,
 				this._jobMgr,
 				this._executionMgr,
+				this._recoveryMgr,
 				this._dialog
 			);
 			return executor.execute();

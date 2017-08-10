@@ -5,6 +5,7 @@ import {Observable, Scheduler} from 'rxjs';
 import {MockIO} from '../../interface/IOs';
 import Dialog from '../../interface/Dialog';
 import JobManager from '../../jobs/JobManager';
+import RecoveryManager from '../recovery/RecoveryManager';
 import {isOutput, isCompletion, ProcessMsg, ProcessCompletion} from '../../system/Process';
 
 import ProgramExecutor from './ProgramExecutor';
@@ -14,11 +15,12 @@ import ExecutionManager from './ExecutionManager';
 describe('Jarvis::learning::program::ProgramExecutor', () => {
   let jobMgr: JobManager;
   let executionMgr: ExecutionManager;
+  let recoveryMgr: RecoveryManager;
   let dialog: Dialog;
 	let io: MockIO;
 
   function createExecutor(program: Program) {
-    return new ProgramExecutor(program, jobMgr, executionMgr, dialog);
+    return new ProgramExecutor(program, jobMgr, executionMgr, recoveryMgr, dialog);
   }
 
   beforeEach(() => {
@@ -26,6 +28,7 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
     dialog = new Dialog(io);
     jobMgr = new JobManager(dialog);
     executionMgr = new ExecutionManager();
+    recoveryMgr = new RecoveryManager(jobMgr);
   });
 
   describe('#execute', () => {

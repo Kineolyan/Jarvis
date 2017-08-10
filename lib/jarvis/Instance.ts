@@ -7,6 +7,7 @@ import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
 import {ProcessResult} from './parser/Rule';
 import ExecutionManager from './learning/program/ExecutionManager';
+import RecoveryManager from './learning/recovery/RecoveryManager';
 import JobManager from './jobs/JobManager';
 import ExecJob from './jobs/ExecJob';
 import Store, {buildDefaultStore, setStore} from './storage/Store'; // FIXME stop using singleton
@@ -32,6 +33,7 @@ class Instance extends EventEmitter {
   private _logger: Logger;
   private _store: Store;
   private _executionMgr: ExecutionManager;
+  private _recoveryMgr: RecoveryManager;
   private _completion: Subject<void>;
 
   constructor(io: IO, name: string) {
@@ -47,6 +49,7 @@ class Instance extends EventEmitter {
     this._store = buildDefaultStore();
     setStore(this._store);
     this._executionMgr = new ExecutionManager();
+    this._recoveryMgr = new RecoveryManager(this._jobMgr);
     this._interpreter = new Interpreter<ProcessResult>();
 
     this._interpreter.rules.push(
@@ -64,7 +67,7 @@ class Instance extends EventEmitter {
 
       new LearnRule(this._dialog, this._store),
       new DoLearningRule(
-        this._dialog, this._store, this._jobMgr, this._executionMgr
+        this._dialog, this._store, this._jobMgr, this._executionMgr, this._recoveryMgr
       ),
       new ShowLearningRule(this._dialog, this._store),
       new ResumeLearningRule(this._executionMgr),

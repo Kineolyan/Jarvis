@@ -5,6 +5,7 @@ import Dialog from './../../interface/Dialog';
 import {ProcessMsg, Process} from '../../system/Process';
 import ExecJob, {ExecDefinition} from '../../jobs/ExecJob';
 import JobManager, {JobRecord} from '../../jobs/JobManager';
+import RecoveryManager from '../recovery/RecoveryManager';
 import * as Maybe from '../../func/Maybe';
 
 import Program from './Program';
@@ -18,6 +19,7 @@ class ProgramExecutor {
       private _program: Program,
       private _jobMgr: JobManager,
       private _executionMgr: ExecutionManager,
+      private _recoveryMgr: RecoveryManager,
       private _dialog: Dialog) {
     this._step = -1;
   }
@@ -57,16 +59,31 @@ class ProgramExecutor {
 
       this.runNextStep();
     } else {
-      const execId = this._executionMgr.postPone({
-        resume: this.resumeStep.bind(this)
-      });
-
-      this._subject.next({
-        source: 'err',
-        data: `Step ${this._step} of ${this._program.name} failed. Resume execution ${execId} to continue.`
-      });
-      this._dialog.say(`Execution of ${this._program.name} stopped at step ${this._step}. Resume execution ${execId} to continue.`);
+      this._recoveryMgr.recoverFrom(
+        {
+          job: this._program.steps[this._step],
+          step: {
+            program: this._program,
+            stepIdx: this._step
+          }
+        },
+        report)
+        .then(recovered => recovered
+          ? this.runNextStep()
+          : this.postPoneStep());
     }
+  }
+
+  postPoneStep() {
+    const execId = this._executionMgr.postPone({
+      resume: this.resumeStep.bind(this)
+    });
+
+    this._subject.next({
+      source: 'err',
+      data: `Step ${this._step} of ${this._program.name} failed. Resume execution ${execId} to continue.`
+    });
+    this._dialog.say(`Execution of ${this._program.name} stopped at step ${this._step}. Resume execution ${execId} to continue.`);
   }
 
   resumeStep() {
