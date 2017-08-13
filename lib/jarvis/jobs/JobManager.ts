@@ -22,7 +22,7 @@ export class JobManager {
     this._jobs = new Map<number, JobRecord>();
   }
 
-  get jobs() {
+  get jobs(): JobRecord[] {
     return Array.from(this._jobs.values());
   }
 

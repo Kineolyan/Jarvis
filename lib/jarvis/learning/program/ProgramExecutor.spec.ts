@@ -42,7 +42,8 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
           {
             "cmd": "ls /home"
           }
-        ]
+        ],
+        recoverySteps: []
       };
 
       const executor = createExecutor(program);
@@ -69,7 +70,8 @@ describe('Jarvis::learning::program::ProgramExecutor', () => {
           {
             "cmd": "ls ."
           }
-        ]
+        ],
+        recoverySteps: []
       };
 
       const clearFile = () => new Promise((resolve, reject) => {
