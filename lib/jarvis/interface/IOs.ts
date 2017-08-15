@@ -246,6 +246,13 @@ class MockIO implements IO {
 		this.inputs.push(...values);
 		return this;
 	}
+
+	prepareInput() {
+		let resolver;
+		this.inputs.push(
+			new Promise(resolve => (resolver = resolve)));
+		return resolver;
+	}
 }
 
 export {
