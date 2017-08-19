@@ -12,6 +12,10 @@ class ExecutionManager {
     this._executions = new Map();
   }
 
+  get count() {
+    return this._executions.size;
+  }
+
   has(executionId: ExecutionId): boolean {
     return this._executions.has(executionId);
   }

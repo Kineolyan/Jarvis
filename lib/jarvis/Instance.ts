@@ -145,10 +145,26 @@ class Instance extends EventEmitter {
     });
   }
 
-  queryAction(): Observable<{}> {
+  private buildQuestion(): string {
+    const notifs: string[] = [];
     const pendingCount = this._dialog.getPendingQuestions().length;
-    const question = `What to do?${pendingCount > 0 ? ` (${pendingCount} questions)` : ''}\n`;
-    return Observable.fromPromise(this._dialog.ask(question))
+    if (pendingCount > 0) {
+      notifs.push(`${pendingCount} questions`);
+    }
+
+    const postPonedCount = this._executionMgr.count;
+    if (postPonedCount > 0) {
+      notifs.push(`${postPonedCount} postponed`);
+    }
+
+    const notifMessage = notifs.length > 0
+      ? ` (${notifs.join(', ')})`
+      : '';
+    return `What to do?${notifMessage}\n`;
+  }
+
+  queryAction(): Observable<{}> {
+    return Observable.fromPromise(this._dialog.ask(this.buildQuestion()))
       .flatMap(answer => {
         const result = this._interpreter.interpret(answer);
         if (Maybe.isDefined(result)) {
