@@ -52,29 +52,26 @@ class LearnRule extends ProcessRule {
 		};
 	}
 
-	captureAction(observer: Observer<ExecDefinition>, first: boolean): Promise<ExecDefinition> {
-		return this._dialog.ask(`What to do ${first ? 'first' : 'then'}? `)
-			.catch(err => observer.error(err))
-			.then(action => {
-				if (/\s*done\s*/.test(action)) {
-					observer.complete();
-				} else {
+	requestDefinition(): Observable<ExecDefinition> {
+		return Observable.create(async observer => {
+			let first = true;
+			try {
+				for (
+						let action = await this._dialog.ask('What to do first? ');
+						!/\s*done\s*/.test(action);
+						action = await this._dialog.ask('What to do then? ')) {
 					const result = this._interpreter.interpret(action);
 					if (Maybe.isDefined(result)) {
-						return result.progress
-							.then(actionResult => observer.next(actionResult))
-							.then(() => this.captureAction(observer, false));
+						const actionResult = await result.progress;
+						observer.next(actionResult);
 					} else {
 						this._dialog.report('Cannot understand the action. Try again');
-						return this.captureAction(observer, false);
 					}
 				}
-			});
-	}
-
-	requestDefinition(): Observable<ExecDefinition> {
-		return Observable.create(observer => {
-			this.captureAction(observer, true);
+				observer.complete();				
+			} catch (err) {
+				observer.error(err)
+			}
 		});
 	}
 
