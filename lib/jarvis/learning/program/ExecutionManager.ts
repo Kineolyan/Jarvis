@@ -23,11 +23,21 @@ class ExecutionManager {
     return execId;
   }
 
-  resume(executionId: ExecutionId) {
+  resume(executionId: ExecutionId): void {
     const execution = this._executions.get(executionId);
     if (execution) {
       this._executions.delete(executionId);
       execution.resume();
+    } else {
+      throw new Error(`No execution with id ${executionId}`);
+    }
+  }
+
+  drop(executionId: ExecutionId): void {
+    const execution = this._executions.get(executionId);
+    if (execution) {
+      // Just drop the execution
+      this._executions.delete(executionId);
     } else {
       throw new Error(`No execution with id ${executionId}`);
     }

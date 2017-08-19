@@ -20,7 +20,7 @@ import {RecordRule, ClearRule} from './parser/autoRules';
 import {JobsRule, JobLogRule} from './parser/jobRules';
 import LearnRule from './learning/LearnRule';
 import DoLearningRule, {ShowLearningRule} from './learning/DoLearningRule';
-import ResumeLearningRule from './learning/ResumeLearningRule';
+import {ResumeLearningRule, DropLearningRule}  from './learning/ResumingRules';
 import {Plexify, PurifyPlex} from './3rd-parties/plex/plexRules';
 
 /**
@@ -75,6 +75,7 @@ class Instance extends EventEmitter {
       ),
       new ShowLearningRule(this._dialog, this._store),
       new ResumeLearningRule(this._executionMgr),
+      new DropLearningRule(this._executionMgr),
 
       new Plexify(this._dialog),
       new PurifyPlex()

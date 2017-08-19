@@ -304,12 +304,15 @@ describe('Jarvis::Instance', () => {
       .addMatches('ResumeLearningRule',
         'resume 4250',
         'resume execution 753',
-        'resume execution of 674302'
-      )
+        'resume execution of 674302')
+      .addMatches('DropLearningRule',
+        'drop 4250',
+        'drop execution 753',
+        'drop execution of 674302')
       .addMatches('ShowLearningRule',
         'show me your learning',
         'list learning',
-	'brag about your learning'
+	      'brag about your learning'
       )
       .addMatches('Plexify',
         'plexify serie "Silicon Valley" "path/to/episode"',

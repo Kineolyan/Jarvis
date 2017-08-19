@@ -30,4 +30,33 @@ class ResumeLearningRule extends ProcessRule {
 
 }
 
-export default ResumeLearningRule;
+class DropLearningRule extends ProcessRule {
+	constructor(private _executionMgr: ExecutionManager) {
+		super(
+			/^\s*(?:drop|cancel) (?:execution (?:of )?)?(\d+)\s*$/,
+			args => this.dropLearning(args)
+		);
+	}
+
+	dropLearning(args) {
+		const executionId = parseInt(args[1], 10);
+		let progress;
+		if (this._executionMgr.has(executionId)) {
+			this._executionMgr.drop(executionId);
+			progress = Process.success();
+		} else {
+			progress = Process.error(1);
+		}
+
+		return {
+			asynchronous: false,
+			description: `Dropping execution ${executionId}`,
+			progress
+		};
+	}
+}
+
+export {
+	ResumeLearningRule,
+	DropLearningRule
+};
