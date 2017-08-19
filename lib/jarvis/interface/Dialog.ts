@@ -55,7 +55,7 @@ class Dialog {
 	 * @param {String} question question to ask
 	 * @return {Promise} user response
 	 */
-	ask(question: string): Promise<any> {
+	ask(question: string): Promise<string> {
 		if (!this._questionInProgress) {
 			return this.askQuestion(question);
 		} else {
@@ -70,7 +70,7 @@ class Dialog {
 		}
 	}
 
-	private askQuestion(question: string): Promise<any> {
+	private askQuestion(question: string): Promise<string> {
 		const q = this.io.question(`[${this._name}]>> ${question ? question : ''}`);
 		// We waited for the question to be created
 		this._questionInProgress = true;

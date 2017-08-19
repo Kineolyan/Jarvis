@@ -45,13 +45,13 @@ class StringWritable extends Writable {
 
 interface IO {
 	prompt(message: string, lineFeed?: boolean): void;
-	question(message: string): Promise<any>;
+	question(message: string): Promise<string>;
 	report(message: string): void;
 }
 
 class AIO implements IO {
 	private _intf: any;
-	private _questionStack: {question: string, resolve: any}[];
+	private _questionStack: {question: string, resolve: (string) => void}[];
 
 	constructor(
 		protected _in: NodeJS.ReadableStream,
@@ -73,7 +73,7 @@ class AIO implements IO {
 		this.output(this._out, message);
 	}
 
-	question(message) {
+	question(message: string): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const hadQuestions = _.isEmpty(this._questionStack);
 
@@ -115,7 +115,7 @@ class AIO implements IO {
 		}
 	}
 
-  private  answerQuestion(answer) {
+  private answerQuestion(answer: string) {
 		const question = this._questionStack.pop();
 		if (question) {
 			const {resolve} = question;
@@ -228,7 +228,7 @@ class MockIO implements IO {
 		this.out[this.out.length - 1] += `${message}${lineFeed ? '\n' : ''}`;
 	}
 
-	question(message) {
+	question(message: string): Promise<string> {
 		this.prompt(message, this._lnOnQuestion);
 		const input = this.inputs.shift();
 		if (input !== undefined) {
