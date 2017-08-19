@@ -14,6 +14,7 @@ import Store, {buildDefaultStore, setStore} from './storage/Store'; // FIXME sto
 import { IO } from './interface/IOs';
 import * as Maybe from './func/Maybe';
 
+import {QuestionRule, HelpRule} from './parser/defaultRules';
 import {RunRule, WatchRule, DynamicWatchRule, QuitRule} from './parser/basicRules';
 import {RecordRule, ClearRule} from './parser/autoRules';
 import {JobsRule, JobLogRule} from './parser/jobRules';
@@ -53,6 +54,9 @@ class Instance extends EventEmitter {
     this._interpreter = new Interpreter<ProcessResult>();
 
     this._interpreter.rules.push(
+      new HelpRule(this._dialog, this._interpreter),
+      new QuestionRule(this._dialog),
+
       new RunRule(this._dialog, this._logger),
       new QuitRule(() => this.quit()),
 
@@ -141,7 +145,9 @@ class Instance extends EventEmitter {
   }
 
   queryAction(): Observable<{}> {
-    return Observable.fromPromise(this._dialog.ask('What to do?\n'))
+    const pendingCount = this._dialog.getPendingQuestions().length;
+    const question = `What to do?${pendingCount > 0 ? ` (${pendingCount} questions)` : ''}\n`;
+    return Observable.fromPromise(this._dialog.ask(question))
       .flatMap(answer => {
         const result = this._interpreter.interpret(answer);
         if (Maybe.isDefined(result)) {

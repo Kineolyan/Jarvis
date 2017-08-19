@@ -95,58 +95,81 @@ describe('Jarvis.Interface.Dialog', function() {
 	});
 
 	describe('#askAgain', function() {
-		let answers: string[];
-
-		beforeEach(async () => {
-			answers = [];
-
+		it('waits for the answer to the pending question to continue', async () => {
 			const r1 = io.prepareInput();
-			const p1 = dialog.ask('What to do first?\n');
-			const p2 = dialog.ask('What to do then?\n');
-			const p3 = dialog.ask('What to finally do?\n');
-			
-			r1('first answer');
-			const a1 = await p1;
-			answers.push(a1);
+			const p1 = dialog.ask('Q1?');
+			let partialResolver;
+			const resolverP: Promise<() => void> = new Promise(r => (partialResolver = r));
+			const p2 = dialog.ask('Q2?')
+				.then(() => new Promise(r => { partialResolver(r); }));
 
-			const questions = dialog.getPendingQuestions();
-			let q2, q3;
-			if (questions[0].question === 'What to do then?\n') {
-				q2 = questions[0];
-				q3 = questions[1];
-			} else {
-				q3 = questions[0];
-				q2 = questions[1];
-			}
-
-			const r3 = io.prepareInput();
-			dialog.askAgain(q3.id);
-			r3('second answer');
-			const a2 = await p3;
-			answers.push(a2);
+			r1('A1');
+			await p1;
 
 			const r2 = io.prepareInput();
-			dialog.askAgain(q2.id);
-			r2('third answer');
-			const a3 = await p2;
-			answers.push(a3);
+			const pending = dialog.askAgain(dialog.getPendingQuestions()[0].id);
 
+			/* This wants to ensure that `pending` is resolved when the question
+			 * is answered, even if the chain after the question `p2` is still in progress.
+			 * With the following, the test fails if `pending` is linked to `p2`. */
+			Promise.all([pending, resolverP])
+				.then(([, finalResolver]) => { finalResolver(); });
+			r2('A2');
+			return p2;
 		});
 
-		it('displayed all questions', () => {
-			expect(io.out).to.eql([
-				'[Jarvis]>> What to do first?\n',
-				'[Jarvis]>> What to finally do?\n',
-				'[Jarvis]>> What to do then?\n'
-			]);
-		});
+		describe('with many questions', () => {
+			let answers: string[];
+			beforeEach(async () => {
+				answers = [];
 
-		it('replied in correct order', () => {
-			expect(answers).to.eql([
-				'first answer',
-				'second answer',
-				'third answer'
-			]);
+				const r1 = io.prepareInput();
+				const p1 = dialog.ask('What to do first?\n');
+				const p2 = dialog.ask('What to do then?\n');
+				const p3 = dialog.ask('What to finally do?\n');
+				
+				r1('first answer');
+				const a1 = await p1;
+				answers.push(a1);
+
+				const questions = dialog.getPendingQuestions();
+				let q2, q3;
+				if (questions[0].question === 'What to do then?\n') {
+					q2 = questions[0];
+					q3 = questions[1];
+				} else {
+					q3 = questions[0];
+					q2 = questions[1];
+				}
+
+				const r3 = io.prepareInput();
+				dialog.askAgain(q3.id);
+				r3('second answer');
+				const a2 = await p3;
+				answers.push(a2);
+
+				const r2 = io.prepareInput();
+				dialog.askAgain(q2.id);
+				r2('third answer');
+				const a3 = await p2;
+				answers.push(a3);
+			});
+
+			it('displayed all questions', () => {
+				expect(io.out).to.eql([
+					'[Jarvis]>> What to do first?\n',
+					'[Jarvis]>> What to finally do?\n',
+					'[Jarvis]>> What to do then?\n'
+				]);
+			});
+
+			it('replied in correct order', () => {
+				expect(answers).to.eql([
+					'first answer',
+					'second answer',
+					'third answer'
+				]);
+			});
 		});
 	});
 });

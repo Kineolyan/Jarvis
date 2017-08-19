@@ -35,7 +35,8 @@ class LearnRule extends ProcessRule {
 				},
 				{
 					name: taskName,
-					steps: []
+					steps: [],
+					recoverySteps: []
 				}
 			).map(program => {
 				const commandList = program.steps.map((c, i) => ` #${i + 1} - ${JSON.stringify(c)}`).join('\n');

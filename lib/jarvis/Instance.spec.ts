@@ -250,13 +250,21 @@ describe('Jarvis::Instance', () => {
 
   it('has correct rules matching', () => {
     new InterpreterChecker().fromInstance((<any>instance)._interpreter)
+      .addMatches('HelpRule',
+        'help',
+        'help me')
+      .addMatches('QuitRule', 
+        'quit', 
+        'exit')
+      .addMatches('QuestionRule',
+        'show me pending questions',
+        'list me pending questions')
       .addMatches('RunRule',
         'run "jarvis in the space"',
         "run 'summer after spring'",
         'run "learn \'something\'"',
         'run the one and only rule'
       )
-      .addMatches('QuitRule', 'quit', 'exit')
       .addMatches('RecordRule',
         'record "new rule with double quotes"',
         "record 'new rule with single quotes'"

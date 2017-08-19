@@ -6,7 +6,7 @@ interface RuleAction<Result> {
 }
 
 class Rule<Result> {
-  constructor(private _expr: RegExp, private _action: RuleAction<Result>) {}
+  constructor(protected _expr: RegExp, private _action: RuleAction<Result>) {}
 
   match(message: string) {
     return this._expr.test(message);
@@ -15,6 +15,10 @@ class Rule<Result> {
   execute(message: string): Result {
     const matches = this._expr.exec(message);
     return this._action(matches);
+  }
+
+  describe(): string {
+    return `${this.constructor.name}: ${this._expr.toString()}`;
   }
 
   static getQuotedArg(arg: string): string {

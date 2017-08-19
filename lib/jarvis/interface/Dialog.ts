@@ -90,7 +90,7 @@ class Dialog {
 		return this._delayedQuestions;
 	}
 
-	askAgain(questionId: number): void {
+	askAgain(questionId: number): Promise<any> {
 		if (this._questionInProgress) {
 			throw new Error('A question is already in progress');			
 		}
@@ -101,8 +101,10 @@ class Dialog {
 		}
 
 		const [{question, resolve, reject}] = this._delayedQuestions.splice(questionIdx, 1);
-		this.askQuestion(question)
-			.then(resolve, reject);
+		const questionP = this.askQuestion(question);
+		questionP.then(resolve, reject);
+
+		return questionP;
 	}
 }
 
