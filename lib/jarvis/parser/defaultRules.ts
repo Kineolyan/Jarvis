@@ -40,21 +40,28 @@ class QuestionRule extends ProcessRule {
 
   listQuestions(): ProcessResult {
     const questions = this._dialog.getPendingQuestions();
-    const listing = `Pending questions:\n${questions
-      .map(q => ` [${q.id}] `)
-      .join('\n')
-    }\nSelect your question? `;
-    const progress = this._dialog.ask(listing)
-      .then(answer => {
-        const questionId = answer 
-          ? parseInt(answer, 10)
-          : questions[0].id;
-        return this._dialog.askAgain(questionId);
-      });
+    let progress;
+    if (questions.length > 0) {
+      const listing = `Pending questions:\n${questions
+        .map(q => ` [${q.id}] `)
+        .join('\n')
+      }\nSelect your question? `;
+      progress = Process.fromPromise(
+        this._dialog.ask(listing)
+          .then(answer => {
+            const questionId = answer 
+              ? parseInt(answer, 10)
+              : questions[0].id;
+            return this._dialog.askAgain(questionId);
+          }));
+    } else {
+      this._dialog.say('No pending questions');
+      progress = Process.success();
+    }
 
     return {
       asynchronous: false,
-      progress: Process.fromPromise(progress),
+      progress: progress,
       description: `Answering pending questions`
     };
   }
