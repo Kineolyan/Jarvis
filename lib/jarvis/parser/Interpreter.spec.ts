@@ -42,7 +42,7 @@ describe('Jarvis::Parser::Interpreter', () => {
     });
 
     describe('on a unique match', () => {
-      let result: Maybe.Type<string>;
+      let result: Maybe.Option<string>;
       beforeEach(() => {
         result = interpreter.interpret('b');
       });
@@ -53,12 +53,12 @@ describe('Jarvis::Parser::Interpreter', () => {
 
       it('returns true since at least one rule matches', () => {
         expect(Maybe.isDefined(result)).to.equal(true, 'Result defined');
-        expect(result).to.eql('b');
+        expect(Maybe.getOrElse(result, null)).to.eql('b');
       });
     });
 
     describe('without matching rules', () => {
-      let result: Maybe.Type<string>;
+      let result: Maybe.Option<string>;
       beforeEach(() => {
         result = interpreter.interpret('c');
       });

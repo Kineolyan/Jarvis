@@ -5,8 +5,8 @@ import Dialog from '../interface/Dialog';
 import JobManager from './../jobs/JobManager';
 import Process from '../system/Process';
 
-class JobsRule extends ProcessRule {
-	constructor(private _jobMgr: JobManager) {
+class JobsRule<T> extends Rule<T> {
+	constructor(private _jobMgr: JobManager, private _result: T) {
 		super(
 			/^(?:(?:show|list) )?jobs\s*$/,
 			args => this.printJobs()
@@ -16,15 +16,12 @@ class JobsRule extends ProcessRule {
 	printJobs() {
 		const now = new Date();
 		this._jobMgr.printJobs();
-		return {
-			asynchronous: false,
-			progress: Process.success()
-		};
+		return this._result;
 	}
 }
 
-class JobLogRule extends ProcessRule {
-	constructor(private _jobMgr: JobManager, private _dialog: Dialog) {
+class JobLogRule<T> extends Rule<T> {
+	constructor(private _jobMgr: JobManager, private _dialog: Dialog, private _result: T) {
 		// FIXME do tests for all the commands that should match
 		// FIXME test that a command does not match multiple rules
 		super(
@@ -37,10 +34,7 @@ class JobLogRule extends ProcessRule {
 		const jobId = parseInt(args[1]);
 		this._jobMgr.logJob(jobId);
 
-		return {
-			asynchronous: false,
-			progress: Process.success()
-		};
+		return this._result;
 	}
 }
 

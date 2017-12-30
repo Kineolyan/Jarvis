@@ -34,13 +34,13 @@ class ExecRule extends DefinitionRule {
 					return cwd;
 				} else {
 					return this.checkPath(pwd)
-						.then(check => Maybe.isDefined(check) ? check : this.correctPath(pwd));
+						.then(check => Maybe.isDefined(check) ? Maybe.get(check) : this.correctPath(pwd));
 				}
 			});
 	}
 
-	checkPath(path: string): Promise<Maybe.Type<string>> {
-		return new Promise<Maybe.Type<string>>((resolve, reject) => {
+	checkPath(path: string): Promise<Maybe.Option<string>> {
+		return new Promise<Maybe.Option<string>>((resolve, reject) => {
 			try {
 				fs.stat(path, err => {
 					resolve(err ? Maybe.none() : Maybe.just(path));
@@ -57,7 +57,7 @@ class ExecRule extends DefinitionRule {
 			.then(newPath => {
 				if (!_.isEmpty(newPath)) {
 					return this.checkPath(newPath)
-						.then(check => Maybe.isDefined(check) ? check : this.correctPath(newPath));
+						.then(check => Maybe.isDefined(check) ? Maybe.get(check) : this.correctPath(newPath));
 				} else {
 					return this.correctPath(path);
 				}

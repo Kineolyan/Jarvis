@@ -323,6 +323,9 @@ describe('Jarvis::Instance', () => {
         'purify plex',
         'purify plex      '
       )
+      .addMatches('InspectRule',
+        'inspect'
+      )
       .addTraps(
         'should not try to learn this',
         'you may be tempted to run "this statement"',

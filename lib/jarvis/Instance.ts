@@ -5,7 +5,7 @@ import {isOutput, isCompletion} from './system/Process';
 import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
-import {ProcessResult} from './parser/Rule';
+import {ProcessResult, syncSuccess} from './parser/Rule';
 import ExecutionManager from './learning/program/ExecutionManager';
 import RecoveryManager from './learning/recovery/RecoveryManager';
 import JobManager from './jobs/JobManager';
@@ -22,6 +22,7 @@ import LearnRule from './learning/LearnRule';
 import DoLearningRule, {ShowLearningRule} from './learning/DoLearningRule';
 import {ResumeLearningRule, DropLearningRule}  from './learning/ResumingRules';
 import {Plexify, PurifyPlex} from './3rd-parties/plex/plexRules';
+import InspectRule from './learning/inspect/InspectRule';
 
 /**
  * The main class of the project starting everything
@@ -54,7 +55,7 @@ class Instance extends EventEmitter {
     this._interpreter = new Interpreter<ProcessResult>();
 
     this._interpreter.rules.push(
-      new HelpRule(this._dialog, this._interpreter),
+      new HelpRule(this._dialog, this._interpreter, syncSuccess),
       new QuestionRule(this._dialog),
 
       new RunRule(this._dialog, this._logger),
@@ -63,8 +64,8 @@ class Instance extends EventEmitter {
       new RecordRule(this._dialog, this._store),
       new ClearRule(this._dialog, this._store),
 
-      new JobsRule(this._jobMgr),
-      new JobLogRule(this._jobMgr, this._dialog),
+      new JobsRule(this._jobMgr, syncSuccess),
+      new JobLogRule(this._jobMgr, this._dialog, syncSuccess),
 
       new WatchRule(this._dialog, this._store, this._logger),
       new DynamicWatchRule(this._dialog, this._logger),
@@ -78,7 +79,9 @@ class Instance extends EventEmitter {
       new DropLearningRule(this._executionMgr),
 
       new Plexify(this._dialog),
-      new PurifyPlex()
+      new PurifyPlex(),
+
+      new InspectRule(this._dialog, this._jobMgr)
     );
 
     this._completion = new Subject<void>();
@@ -99,8 +102,8 @@ class Instance extends EventEmitter {
   doAction(input: string): Promise<number> {
     const result = this._interpreter.interpret(input);
     if (Maybe.isDefined(result)) {
-      if (result.progress !== undefined) {
-        const process = result.progress;
+      const {progress: process} = Maybe.get(result);
+      if (process !== undefined) {
         return new Promise((resolve, reject) => {
           try {
             process.subscribe({
@@ -166,8 +169,9 @@ class Instance extends EventEmitter {
   queryAction(): Observable<{}> {
     return Observable.fromPromise(this._dialog.ask(this.buildQuestion()))
       .flatMap(answer => {
-        const result = this._interpreter.interpret(answer);
-        if (Maybe.isDefined(result)) {
+        const r = this._interpreter.interpret(answer);
+        if (Maybe.isDefined(r)) {
+          const result = Maybe.get(r);
           if (!result.asynchronous && result.progress) {
             return result.progress;
           }

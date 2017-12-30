@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
 
+import * as Maybe from '../../func/Maybe';
 import {RuleAction, ProcessRule, ProcessResult} from '../../parser/Rule';
 import Dialog from '../../interface/Dialog';
 import Logger from '../../interface/Logger';
@@ -59,7 +60,7 @@ class Plexify extends ProcessRule {
       (chain, episodePath) => chain
         .then(map => {
           const guess = plex.guessEpisode(episodePath);
-          const guessStr = guess ? ` -> ${guess.season}x${guess.episode}` : '';
+          const guessStr = Maybe.doOrElse(guess, guess => ` -> ${guess.season}x${guess.episode}`, '');
           return this._dialog.ask(`[${episodePath}]${guessStr}\nepisode number [Y|ssee]: `)
             .then(value => {
               let metadata;

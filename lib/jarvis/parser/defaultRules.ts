@@ -1,12 +1,15 @@
 import { Observable } from 'rxjs';
 
-import {RuleAction, ProcessRule, ProcessResult} from './Rule';
+import Rule, {RuleAction, ProcessRule, ProcessResult} from './Rule';
 import Dialog from '../interface/Dialog';
 import Process from '../system/Process';
 import Interpreter from './Interpreter';
 
-class HelpRule extends ProcessRule {
-	constructor(private _dialog: Dialog, private _interpreter: Interpreter<any>) {
+class HelpRule<T> extends Rule<T> {
+	constructor(
+    private _dialog: Dialog, 
+    private _interpreter: Interpreter<any>,
+    private _returnValue: T) {
 		super(
       /^\s*help(?: +me)?\s*$/,
       args => this.printHelp()
@@ -17,16 +20,12 @@ class HelpRule extends ProcessRule {
     return `${this._expr} -> Print this help`
   }
 
-  printHelp(): ProcessResult {
+  printHelp() {
     const rules = this._interpreter.rules
       .map(rule => `  ${rule.describe()}`);
     this._dialog.say(`Help:\n${rules.join('\n')}\n`);
 
-    return {
-      asynchronous: false,
-      progress: Process.success(),
-      description: `Printing help`
-    };
+    return this._returnValue;
   }
 }
 

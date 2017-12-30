@@ -16,7 +16,7 @@ class Interpreter<Result> {
    * @param message - message to Interpreter
    * @return result of the operation, or false if unknown
    */
-  interpret(message: string): Maybe.Type<Result> {
+  interpret(message: string): Maybe.Option<Result> {
     for (let rule of this._rules) {
       if (rule.match(message)) {
         return Maybe.just(rule.execute(message));

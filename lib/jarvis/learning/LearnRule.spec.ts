@@ -19,7 +19,6 @@ describe('Jarvis::learning::LearnRule', () => {
 		rule = new LearnRule(dialog, store);
 	});
 
-
   it('has correct rules matching', () => {
     new InterpreterChecker().fromInstance((<any>rule)._interpreter)
 			.addMatches('ExecRule',
@@ -27,6 +26,9 @@ describe('Jarvis::learning::LearnRule', () => {
 				'exec "simple escaped command"',
 				"exec 'other cmd'"
 			)
+			.addMatches('HelpRule',
+				'help',
+				'help me')
 			.addTraps(
 				'you may be tempted to exec the rest of this line'
 			)

@@ -7,6 +7,7 @@ import Process from '../system/Process';
 import * as Maybe from '../func/Maybe';
 import {ExecDefinition} from '../jobs/ExecJob';
 import Store from '../storage/Store';
+import {HelpRule} from '../parser/defaultRules';
 
 import Program from './program/Program';
 import ExecRule from './rules/ExecRule';
@@ -21,7 +22,9 @@ class LearnRule extends ProcessRule {
 			args => this.learnTask(args)
 		)
 		this._interpreter = new Interpreter<DefinitionResult>();
-		this._interpreter.rules.push(new ExecRule(this._dialog));
+		this._interpreter.rules.push(
+			new HelpRule(_dialog, this._interpreter, {}),
+			new ExecRule(this._dialog));
 	}
 
 	learnTask(args: any): ProcessResult {
@@ -61,12 +64,13 @@ class LearnRule extends ProcessRule {
 						!/\s*done\s*/.test(action);
 						action = await this._dialog.ask('What to do then? ')) {
 					const result = this._interpreter.interpret(action);
-					if (Maybe.isDefined(result)) {
-						const actionResult = await result.progress;
+					const operation = Maybe.doOrElse(result, r => r.progress || null, undefined);
+					if (operation) {
+						const actionResult = await operation;
 						observer.next(actionResult);
-					} else {
+					} else if (operation === undefined) {
 						this._dialog.report('Cannot understand the action. Try again');
-					}
+					} // else null => non-defining operation
 				}
 				observer.complete();				
 			} catch (err) {

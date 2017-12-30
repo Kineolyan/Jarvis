@@ -42,7 +42,7 @@ class DoLearningRule extends ProcessRule {
 		};
 	}
 
-	findProgram(name): Promise<Maybe.Type<Program>> {
+	findProgram(name): Promise<Maybe.Option<Program>> {
 		return this._store.get('programs')
 			.then(programs => {
 				const def = programs[name];
@@ -50,10 +50,10 @@ class DoLearningRule extends ProcessRule {
 			})
 	}
 
-	executeProgram(name: string, program: Maybe.Type<Program>): Observable<ProcessMsg> {
+	executeProgram(name: string, program: Maybe.Option<Program>): Observable<ProcessMsg> {
 		if (Maybe.isDefined(program)) {
 			const executor = new ProgramExecutor(
-				program,
+				Maybe.get(program),
 				this._jobMgr,
 				this._executionMgr,
 				this._recoveryMgr,

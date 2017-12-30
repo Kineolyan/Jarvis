@@ -1,5 +1,5 @@
 import {Observable} from 'rxjs';
-import {ProcessMsg} from '../system/Process';
+import Process, {ProcessMsg} from '../system/Process';
 
 interface RuleAction<Result> {
   (value: any): Result
@@ -36,10 +36,15 @@ interface ProcessResult {
   description?: string
 }
 class ProcessRule extends Rule<ProcessResult> {}
+const syncSuccess = {
+  asynchronous: false,
+  progress: Process.success()
+};
 
 export default Rule;
 export {
   RuleAction,
   ProcessResult,
-  ProcessRule
+  ProcessRule,
+  syncSuccess
 };

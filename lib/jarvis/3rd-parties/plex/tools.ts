@@ -74,7 +74,7 @@ function toSerieNb(value: number): string {
 	return value < 10 ? `0${value}` : value.toString();
 }
 
-function guessEpisode(episode: string): Maybe.Type<SerieMetadata>{
+function guessEpisode(episode: string): Maybe.Option<SerieMetadata>{
 	const episodeName = path.basename(episode);
 	const exprs = [/s(\d{2})e(\d{2})/i];
 	for (const expr of exprs) {
