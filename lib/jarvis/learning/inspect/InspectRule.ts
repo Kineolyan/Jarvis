@@ -13,10 +13,11 @@ import Interpreter from '../../parser/Interpreter';
 import {JobsRule, JobLogRule} from '../../parser/jobRules';
 import {HelpRule} from '../../parser/defaultRules';
 
-type InspectionResult = any;
+type Context = {[key: string]: any};
+type Transformer = (c: Context) => Context;
+type InspectionResult = null | Promise<Transformer>;
 abstract class InspectionRule extends Rule<InspectionResult> {};
 
-type Context = {[key: string]: any};
 
 class InspectRule extends ProcessRule {
 
@@ -39,7 +40,7 @@ class InspectRule extends ProcessRule {
 
 	inspect() {
     this._dialog.say('Inspection module loaded. Ready to work.');
-    const progress = this.executeInspectionAction()
+    const progress = this.executeInspectionAction({})
       .then(() => {
         this._dialog.say('Waston is leaving the room. Back to normal mode.');
         return Process.success()
@@ -51,20 +52,24 @@ class InspectRule extends ProcessRule {
     };
   }
   
-  executeInspectionAction() {
+  executeInspectionAction(context: Context) {
     return this._dialog.ask('Operation? ')
-      .then(answer => {
+      .then(async answer => {
         if (answer === 'quit') {
           return;
         }
 
         const result = this._interpreter.interpret(answer);
         if (Maybe.isDefined(result)) {
-          // TODO, use the result
+          const tranformer = await Maybe.get(result);
+          context = tranformer !== null
+            ? tranformer(context)
+            : context;
         } else {
           this._dialog.report('Cannot understand the action. Try again');
         }
-        return this.executeInspectionAction();
+        
+        return this.executeInspectionAction(context);
       });
   }
 
@@ -116,17 +121,55 @@ class LookForRule extends InspectionRule {
     } else {
       this._dialog.report(`No jobs with id "${jobId}"`);
     }
+    return null;
   }
 
+}
+
+function getMatches(matches, dialog, askForValues) {
+  if (matches.length === 1) {
+    return Promise.resolve(matches[0]);
+  } else {
+    return pickValue(
+      matches, 
+      dialog,
+      (dialog, values) => {
+        let extract = values.slice(0, 5).join('\n');
+        if (values.length > 5) {
+          extract += `\n...\n${values.slice(Math.max(5, values.length)).join('\n')}`;
+        }
+        askForValues(dialog, values, extract);
+      });
+  }
+}
+
+function getCapturedValue(match, dialog, askForMatch) {
+  if (match.length === 1) {
+    return Promise.resolve(match[0]); // Matched sequence
+  } else if (match.length === 2) {
+    return Promise.resolve(match[1]); // Single captured group
+  } else {
+    const choices = match.map((m, i) => ` [${i}] ${m}`).join('/n');
+    return pickValue(match, dialog, askForMatch(match, dialog, choices));
+  }
+}
+
+async function pickValue<T>(
+    values: T[], 
+    dialog: Dialog, 
+    displayValues: (d: Dialog, v: T[]) => void): Promise<T> {
+  displayValues(dialog, values);
+  const idx = await dialog.ask('Select occurence? [first|last|<n>] ');
+  return nthValue(values, idx);
 }
 
 function nthValue<T>(values: T[], idx: number|string) {
   if (idx === 'first') {
     return values[0];
   } else if (idx === 'last') {
-    ...
+    return values[values.length - 1];
   } else {
-    ...
+    return values[idx];
   }
 }
 
@@ -146,30 +189,21 @@ class CaptureAsRule extends InspectionRule {
     if (job !== undefined) {
       const pattern = args[1];
       const matches = matchLogs(job, pattern, args[2]);
-      if (matches.length === 1) {
-        ...
-      } else {
-        let extract = matches.slice(0, 5).join('\n');
-        if (matches.length > 5) {
-          extract += `\n...\n${matches.slice(Math.max(5, matches.length)).join('\n')}`;
-        }
-        this._dialog.say(`${matches.length} matches for ${pattern}:\n${extract}`);
-        const idx = await this._dialog.ask('Select occurence? [first|last|<n>] ');
-        const match = nthValue(matches, idx);
-
-        const value;
-        if (match.length === 1) {
-          ... match[0]
-        } else if (match.length === 2) {
-          ... match[1]
-        } else {
-          this._dialog.say(`Select the value to use`);
-        }
-
-        context[args[4]] = value;
-      }
+      return getMatches(
+          matches, 
+          this._dialog, 
+          (values, dialog, extract) => dialog.say(`${values.length} matches for ${pattern}:\n${extract}`))
+        .then(match => getCapturedValue(
+          match, 
+          this._dialog,
+          (values, dialog, choices) => dialog(`Select match to use:\n${choices}`)))
+        .then(value => context => {
+          context[args[4]] = value;
+          return context;
+        });
     } else {
       this._dialog.report(`No jobs with id "${jobId}"`);
+      return null;
     }
   }
 
