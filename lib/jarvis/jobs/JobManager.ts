@@ -7,6 +7,7 @@ import {isOutput, isCompletion} from '../system/Process';
 interface JobRecord {
   description?: string,
   startTime: number,
+  endTime: number | undefined,
   code: number | undefined,
   error?: Error,
   logs: string[],
@@ -42,6 +43,7 @@ export class JobManager {
       code: undefined,
       description: description,
       startTime: Date.now(),
+      endTime: undefined,
       completion: new Promise<JobRecord>(resolve => {
         job.delay(10) // Delay to let time for the record to be registered
           .subscribe({
@@ -63,6 +65,8 @@ export class JobManager {
           });
       })
       .then(record => {
+        record.endTime = Date.now();
+
         if (record.code === 0) {
           this._dialog.say(`Task ${jobId} completed`);
         } else {

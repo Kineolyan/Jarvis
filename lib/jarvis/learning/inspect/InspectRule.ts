@@ -35,7 +35,8 @@ class InspectRule extends ProcessRule {
       new HelpRule(_dialog, this._interpreter, null),
       new JobsRule(jobMgr, null),
       new JobLogRule(jobMgr, _dialog, null),
-      new LookForRule(jobMgr, _dialog));
+      new LookForRule(jobMgr, _dialog),
+      new CaptureAsRule(jobMgr, _dialog));
 	}
 
 	inspect() {
@@ -51,7 +52,7 @@ class InspectRule extends ProcessRule {
       progress
     };
   }
-  
+
   executeInspectionAction(context: Context) {
     return this._dialog.ask('Operation? ')
       .then(async answer => {
@@ -68,7 +69,7 @@ class InspectRule extends ProcessRule {
         } else {
           this._dialog.report('Cannot understand the action. Try again');
         }
-        
+
         return this.executeInspectionAction(context);
       });
   }
@@ -91,7 +92,7 @@ const matchLogs = (job, pattern, userFlags) => {
     let match: RegExpExecArray | null;
     while ((match = expr.exec(line)) !== null) {
       matches.push(match.slice(0, match.length));
-    } 
+    }
   });
 
   return matches;
@@ -100,7 +101,7 @@ const matchLogs = (job, pattern, userFlags) => {
 class LookForRule extends InspectionRule {
 
   constructor(
-    private _jobMgr: JobManager, 
+    private _jobMgr: JobManager,
     private _dialog: Dialog) {
     super(
       /\s*look for \/(.+)\/(\w*) in job (\d+)$/,
@@ -131,7 +132,7 @@ function getMatches(matches, dialog, askForValues) {
     return Promise.resolve(matches[0]);
   } else {
     return pickValue(
-      matches, 
+      matches,
       dialog,
       (dialog, values) => {
         let extract = values.slice(0, 5).join('\n');
@@ -155,8 +156,8 @@ function getCapturedValue(match, dialog, askForMatch) {
 }
 
 async function pickValue<T>(
-    values: T[], 
-    dialog: Dialog, 
+    values: T[],
+    dialog: Dialog,
     displayValues: (d: Dialog, v: T[]) => void): Promise<T> {
   displayValues(dialog, values);
   const idx = await dialog.ask('Select occurence? [first|last|<n>] ');
@@ -174,12 +175,12 @@ function nthValue<T>(values: T[], idx: number|string) {
 }
 
 class CaptureAsRule extends InspectionRule {
-  
+
   constructor(
-    private _jobMgr: JobManager, 
+    private _jobMgr: JobManager,
     private _dialog: Dialog) {
     super(
-      /\s*capture \/(.+)\/(\w*) in job (\d+) as ([\w\-_])$/,
+      /\s*capture \/(.+)\/(\w*) in job (\d+) as ([\w\-_]+)$/,
       args => this.captureValue(args));
   }
 
@@ -190,11 +191,11 @@ class CaptureAsRule extends InspectionRule {
       const pattern = args[1];
       const matches = matchLogs(job, pattern, args[2]);
       return getMatches(
-          matches, 
-          this._dialog, 
+          matches,
+          this._dialog,
           (values, dialog, extract) => dialog.say(`${values.length} matches for ${pattern}:\n${extract}`))
         .then(match => getCapturedValue(
-          match, 
+          match,
           this._dialog,
           (values, dialog, choices) => dialog(`Select match to use:\n${choices}`)))
         .then(value => context => {
