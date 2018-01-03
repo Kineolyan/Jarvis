@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import {Observable} from 'rxjs';
 import * as _ from 'lodash';
 
@@ -14,7 +15,7 @@ import {JobsRule, JobLogRule} from '../../parser/jobRules';
 import {HelpRule} from '../../parser/defaultRules';
 
 type Context = {[key: string]: any};
-type Transformer = (c: Context) => Context;
+type Transformer = (c: Context) => Context | void;
 type InspectionResult = null | Promise<Transformer>;
 abstract class InspectionRule extends Rule<InspectionResult> {};
 
@@ -36,7 +37,8 @@ class InspectRule extends ProcessRule {
       new JobsRule(jobMgr, null),
       new JobLogRule(jobMgr, _dialog, null),
       new LookForRule(jobMgr, _dialog),
-      new CaptureAsRule(jobMgr, _dialog));
+      new CaptureAsRule(jobMgr, _dialog),
+      new PrintContextRule(_dialog));
 	}
 
 	inspect() {
@@ -49,7 +51,7 @@ class InspectRule extends ProcessRule {
 
     return {
       asynchronous: false,
-      progress
+      progress: Observable.fromPromise(progress)
     };
   }
 
@@ -63,9 +65,7 @@ class InspectRule extends ProcessRule {
         const result = this._interpreter.interpret(answer);
         if (Maybe.isDefined(result)) {
           const tranformer = await Maybe.get(result);
-          context = tranformer !== null
-            ? tranformer(context)
-            : context;
+          context = tranformer !== null && tranformer(context) || context;
         } else {
           this._dialog.report('Cannot understand the action. Try again');
         }
@@ -134,12 +134,13 @@ function getMatches(matches, dialog, askForValues) {
     return pickValue(
       matches,
       dialog,
-      (dialog, values) => {
-        let extract = values.slice(0, 5).join('\n');
+      (dialog_, values) => {
+        let extract = values.slice(0, 5).map((v, i) => ` [${i}] ${v}`).join('\n');
         if (values.length > 5) {
-          extract += `\n...\n${values.slice(Math.max(5, values.length)).join('\n')}`;
+          const shift = Math.max(5, values.length - 5);
+          extract += `\n...\n${values.slice(Math.max(5, values.length)).map((v, i) => ` [${shift + i}] ${v}`).join('\n')}`;
         }
-        askForValues(dialog, values, extract);
+        askForValues(values, dialog_, extract);
       });
   }
 }
@@ -208,6 +209,21 @@ class CaptureAsRule extends InspectionRule {
     }
   }
 
+}
+
+class PrintContextRule extends InspectionRule {
+
+  constructor(dialog: Dialog) {
+    super(
+      /(?:print|show)(?: me)*(?: the)* context/,
+      args => this.printContext(dialog));
+  }
+
+  printContext(dialog: Dialog) {
+    return Promise.resolve(context => {
+      dialog.say(`Context:\n${JSON.stringify(context)}`);
+    });
+  }
 }
 
 export default InspectRule;

@@ -39,6 +39,9 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
         'capture /as(\\w)*?$/ in job 39 as var',
         'capture /asdf/gi in job 39 as var',
         'capture /asdf/ in job 39 as var-with_strange-CHARS')
+      .addMatches('PrintContextRule',
+        'show me context',
+        'print the context')
       .runTests();
   });
 
@@ -55,11 +58,15 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
     io.input(
       'show jobs',
       `show logs for job ${jobId}`,
-      `look for /\w+ line/ in job ${jobId}`,
-      `capture /\w+ line/ in job ${jobId} as line-nb`);
+      `look for /\\w+ line/ in job ${jobId}`,
+      `capture /\\w+ line/ in job ${jobId} as line-nb`);
     const nbResponse = io.prepareInput();
+    io.input('quit');
 
     const result = rule.execute('inspect');
-
+    nbResponse('last');
+    const res = await result.progress.toPromise()
+      .then(() => true);
+    expect(res).to.eq(true);
   });
 });
