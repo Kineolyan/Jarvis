@@ -62,6 +62,8 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
       `capture /\\w+ line/ in job ${jobId} as line-nb`);
     const nbResponse = io.prepareInput();
     io.input(
+      `capture /(\\w+) line/ in job ${jobId} as cnt`,
+      '-3',
       'show context',
       'quit');
 
@@ -71,7 +73,9 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
       .then(() => true);
     expect(res).to.eq(true);
     const l = io.out.length
-    expect(io.out[l - 2]).to.match(/"line-nb":"last line"/i);
+    expect(io.out[l - 2])
+      .to.match(/"line-nb":"last line"/i)
+      .to.match(/"cnt":"second"/i);
     expect(io.out[l - 1]).to.match(/back to normal/i);
   });
 });

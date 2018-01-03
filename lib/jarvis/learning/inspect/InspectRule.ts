@@ -161,17 +161,18 @@ async function pickValue<T>(
     dialog: Dialog,
     displayValues: (d: Dialog, v: T[]) => void): Promise<T> {
   displayValues(dialog, values);
-  const idx = await dialog.ask('Select occurence? [first|last|<n>] ');
+  const idx = await dialog.ask('Select occurrence? [first|last|<n>|-<n>] ');
   return nthValue(values, idx);
 }
 
-function nthValue<T>(values: T[], idx: number|string) {
+function nthValue<T>(values: T[], idx: string) {
   if (idx === 'first') {
     return values[0];
   } else if (idx === 'last') {
     return values[values.length - 1];
   } else {
-    return values[idx];
+    const i = parseInt(idx, 10);
+    return values[i < 0 ? values.length + i : i];
   }
 }
 
@@ -195,10 +196,11 @@ class CaptureAsRule extends InspectionRule {
           matches,
           this._dialog,
           (values, dialog, extract) => dialog.say(`${values.length} matches for ${pattern}:\n${extract}`))
-        .then(match => getCapturedValue(
+        .then(match => {
+          return getCapturedValue(
           match,
           this._dialog,
-          (values, dialog, choices) => dialog(`Select match to use:\n${choices}`)))
+          (values, dialog, choices) => dialog(`Select match to use:\n${choices}`))})
         .then(value => context => {
           context[args[4]] = value;
           return context;
