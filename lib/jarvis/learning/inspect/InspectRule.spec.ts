@@ -61,12 +61,17 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
       `look for /\\w+ line/ in job ${jobId}`,
       `capture /\\w+ line/ in job ${jobId} as line-nb`);
     const nbResponse = io.prepareInput();
-    io.input('quit');
+    io.input(
+      'show context',
+      'quit');
 
     const result = rule.execute('inspect');
     nbResponse('last');
     const res = await result.progress.toPromise()
       .then(() => true);
     expect(res).to.eq(true);
+    const l = io.out.length
+    expect(io.out[l - 2]).to.match(/"line-nb":"last line"/i);
+    expect(io.out[l - 1]).to.match(/back to normal/i);
   });
 });
