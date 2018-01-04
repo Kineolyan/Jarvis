@@ -1,5 +1,6 @@
 import {expect} from 'chai';
 import {Observable, Scheduler} from 'rxjs';
+import * as _ from 'lodash';
 
 import {MockIO} from '../../interface/IOs';
 import Dialog from '../../interface/Dialog';
@@ -62,7 +63,7 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
       `capture /\\w+ line/ in job ${jobId} as line-nb`);
     const nbResponse = io.prepareInput();
     io.input(
-      `capture /(\\w+) line/ in job ${jobId} as cnt`,
+      `capture /(\\w+) line/i in job ${jobId} as cnt`,
       '-3',
       'show context',
       'quit');
@@ -73,9 +74,21 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
       .then(() => true);
     expect(res).to.eq(true);
     const l = io.out.length
+    const nbMatch = {
+      query: {pattern: "\\w+ line", flags: ''},
+      matchIdx: 'last',
+      valueIdx: 0,
+      value: 'last line'
+    };
+    const cntMatch = {
+      query: {pattern: "(\\w+) line", flags: 'i'},
+      matchIdx: '-3',
+      valueIdx: 1,
+      value: 'second'
+    };
     expect(io.out[l - 2])
-      .to.match(/"line-nb":"last line"/i)
-      .to.match(/"cnt":"second"/i);
+      .to.match(new RegExp(`"line-nb":${_.escapeRegExp(JSON.stringify(nbMatch))}`))
+      .to.match(new RegExp(`"cnt":${_.escapeRegExp(JSON.stringify(cntMatch))}`));
     expect(io.out[l - 1]).to.match(/back to normal/i);
   });
 });

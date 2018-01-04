@@ -127,9 +127,10 @@ class LookForRule extends InspectionRule {
 
 }
 
-function getMatches(matches, dialog, askForValues) {
+type Match<T> = {index: string|number, value:T};
+function getMatches<T>(matches: T[], dialog: Dialog, askForValues): Promise<Match<T>> {
   if (matches.length === 1) {
-    return Promise.resolve(matches[0]);
+    return Promise.resolve({index: 0, value: matches[0]});
   } else {
     return pickValue(
       matches,
@@ -145,11 +146,13 @@ function getMatches(matches, dialog, askForValues) {
   }
 }
 
-function getCapturedValue(match, dialog, askForMatch) {
-  if (match.length === 1) {
-    return Promise.resolve(match[0]); // Matched sequence
-  } else if (match.length === 2) {
-    return Promise.resolve(match[1]); // Single captured group
+function getCapturedValue<T>(match: T[], dialog: Dialog, askForMatch): Promise<Match<T>> {
+  if (match.length <= 2) {
+    // len = 1 -> sequence matched by expr
+    // len = 2 -> single captured group
+    const index = match.length - 1;
+    const value = match[index];
+    return Promise.resolve({index, value});
   } else {
     const choices = match.map((m, i) => ` [${i}] ${m}`).join('/n');
     return pickValue(match, dialog, askForMatch(match, dialog, choices));
@@ -159,13 +162,13 @@ function getCapturedValue(match, dialog, askForMatch) {
 async function pickValue<T>(
     values: T[],
     dialog: Dialog,
-    displayValues: (d: Dialog, v: T[]) => void): Promise<T> {
+    displayValues: (d: Dialog, v: T[]) => void): Promise<Match<T>> {
   displayValues(dialog, values);
   const idx = await dialog.ask('Select occurrence? [first|last|<n>|-<n>] ');
-  return nthValue(values, idx);
+  return {index: idx, value: nthValue(values, idx)};
 }
 
-function nthValue<T>(values: T[], idx: string) {
+function nthValue<T>(values: T[], idx: string|number) {
   if (idx === 'first') {
     return values[0];
   } else if (idx === 'last') {
@@ -191,18 +194,27 @@ class CaptureAsRule extends InspectionRule {
     const job = this._jobMgr.getJob(jobId);
     if (job !== undefined) {
       const pattern = args[1];
-      const matches = matchLogs(job, pattern, args[2]);
+      const flags = args[2];
+      const matches = matchLogs(job, pattern, flags);
       return getMatches(
           matches,
           this._dialog,
           (values, dialog, extract) => dialog.say(`${values.length} matches for ${pattern}:\n${extract}`))
-        .then(match => {
-          return getCapturedValue(
-          match,
-          this._dialog,
-          (values, dialog, choices) => dialog(`Select match to use:\n${choices}`))})
-        .then(value => context => {
-          context[args[4]] = value;
+        .then(async ({index, value: match}) => {
+          const result = await getCapturedValue(
+            match,
+            this._dialog,
+            (values, dialog, choices) => dialog(`Select match to use:\n${choices}`));
+
+          return {
+            query: {pattern, flags},
+            matchIdx: index,
+            valueIdx: result.index,
+            value: result.value
+          }
+        })
+        .then(result => context => {
+          context[args[4]] = result;
           return context;
         });
     } else {
