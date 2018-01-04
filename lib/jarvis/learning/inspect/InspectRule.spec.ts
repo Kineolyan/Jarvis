@@ -42,7 +42,8 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
         'capture /asdf/ in job 39 as var-with_strange-CHARS')
       .addMatches('PrintContextRule',
         'show me context',
-        'print the context')
+        'print the context',
+        'print context values')
       .runTests();
   });
 
@@ -65,6 +66,7 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
     io.input(
       `capture /(\\w+) line/i in job ${jobId} as cnt`,
       '-3',
+      'show context values',
       'show context',
       'quit');
 
@@ -86,6 +88,9 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
       valueIdx: 1,
       value: 'second'
     };
+    expect(io.out[l - 3])
+    .to.match(new RegExp(`"line-nb":"${_.escapeRegExp(nbMatch.value)}"`))
+    .to.match(new RegExp(`"cnt":"${_.escapeRegExp(cntMatch.value)}"`));
     expect(io.out[l - 2])
       .to.match(new RegExp(`"line-nb":${_.escapeRegExp(JSON.stringify(nbMatch))}`))
       .to.match(new RegExp(`"cnt":${_.escapeRegExp(JSON.stringify(cntMatch))}`));

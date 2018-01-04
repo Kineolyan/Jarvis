@@ -174,7 +174,7 @@ function nthValue<T>(values: T[], idx: string|number) {
   } else if (idx === 'last') {
     return values[values.length - 1];
   } else {
-    const i = parseInt(idx, 10);
+    const i = parseInt(idx as string, 10);
     return values[i < 0 ? values.length + i : i];
   }
 }
@@ -229,13 +229,17 @@ class PrintContextRule extends InspectionRule {
 
   constructor(dialog: Dialog) {
     super(
-      /(?:print|show)(?: me)*(?: the)* context/,
-      args => this.printContext(dialog));
+      /(?:print|show)(?: me)?(?: the)? context( values)?/,
+      args => this.printContext(args, dialog));
   }
 
-  printContext(dialog: Dialog) {
+  printContext(args, dialog: Dialog) {
+    const showValuesOnly = args[1] !== undefined;
     return Promise.resolve(context => {
-      dialog.say(`Context:\n${JSON.stringify(context)}`);
+      const outputContext = showValuesOnly
+        ? _.mapValues(context, v => v.value)
+        : context;
+      dialog.say(`Context:\n${JSON.stringify(outputContext)}`);
     });
   }
 }
