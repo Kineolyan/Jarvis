@@ -12,7 +12,6 @@ import {ProcessMsg} from '../../system/Process';
 import ExecJob, {ExecDefinition} from '../../jobs/ExecJob';
 import Interpreter from '../../parser/Interpreter';
 import {JobsRule, JobLogRule} from '../../parser/jobRules';
-import {HelpRule} from '../../parser/defaultRules';
 
 import {Context, Transformer, matchLogs, getMatches, getCapturedValue} from './tools';
 

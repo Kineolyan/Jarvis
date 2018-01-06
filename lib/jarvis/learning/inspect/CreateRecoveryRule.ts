@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 
 import * as Maybe from '../../func/Maybe';
 import Dialog from "../../interface/Dialog";
-import Rule from "../../parser/Rule";
+import Rule, {RuleTransformer} from "../../parser/Rule";
 import Interpreter from "../../parser/Interpreter";
 import ExecRule from "../rules/ExecRule";
 import { HelpRule } from "../../parser/defaultRules";
@@ -10,6 +10,8 @@ import Process from "../../system/Process";
 
 import { CaptureAsRule, PrintContextRule } from "./inspectionRules";
 import { Context } from "./tools";
+import { ExecDefinition } from '../../jobs/ExecJob';
+import {DefinitionResult} from '../DefinitionRule';
 
 /*
 create recovery
@@ -22,6 +24,34 @@ attempt a dry run
 end
  */
 
+type Operation = any;
+type Payload = {context: Context, process: Operation[]};
+type Transformer = (p: Payload) => (void | Promise<Payload>);
+
+const applyTemplate = (value: string | undefined, context: Context = {}) => {
+  if (value === undefined) {
+    return value;
+  }
+
+  // look for every template
+  const keys = new Set();
+  const expr = /@([\w\-_]+)/g;
+  let match;
+  while ((match = expr.exec(value)) !== null) {
+    keys.add(match[1]);
+  }
+
+  let result = value;
+  keys.forEach(key => {
+    const entry = context[key];
+    if (entry !== undefined) {
+      result = result.replace(`@{key}`, entry.value);
+    }
+  });
+
+  return result;
+}
+
 class CreateRecoveryRule extends Rule<any> {
 
 	private interpreter: Interpreter<any>;
@@ -31,17 +61,21 @@ class CreateRecoveryRule extends Rule<any> {
 			/create (manual )?recovery(?: process)?/,
 			args => this.createRecovery(dialog, context, args));
 
-		this.interpreter = new Interpreter<any>();
+		this.interpreter = new Interpreter<Transformer>();
 		this.interpreter.rules.push(
-			new HelpRule(dialog, this.interpreter, ),
-			new ExecRule(dialog),
+			newn RuleTransformer(
+        new HelpRule(dialog, this.interpreter),
+        (payload) => {}),
+      new RuleTransformer(
+        new ExecRule(dialog),
+        this.addExecution),
 			new CaptureAsRule(null, dialog),
 			new PrintContextRule(dialog));
 	}
 
 	private createRecovery(dialog, context, args) {
     dialog.say('Creating a new rule .');
-    const progress = this.loopOnDefinition(dialog, context)
+    const progress = this.loopOnDefinition(dialog, context, {})
       .then((process) => {
 				// TODO do something with the process
         dialog.say('Done :)');
@@ -54,11 +88,11 @@ class CreateRecoveryRule extends Rule<any> {
     };
 	}
 
-  private loopOnDefinition(dialog: Dialog, context: Context) {
+  private loopOnDefinition(dialog: Dialog, context: Context, process: any) {
     return dialog.ask('Operation? ')
       .then(async answer => {
         if (/^(?:quit|end)$/.test(answer)) {
-          return null;
+          return process;
         }
 
         const result = this.interpreter.interpret(answer);
@@ -71,6 +105,25 @@ class CreateRecoveryRule extends Rule<any> {
 
         return this.loopOnDefinition(dialog, context);
       });
-	}
+  }
+
+  private addExecution(def: DefinitionResult) {
+    if (def.progress) {
+      return def.progress.then((execution: ExecDefinition) => (payload) => {
+        const {context, process} = payload;
+        const exec: ExecDefinition = {
+          cmd: applyTemplate(execution.cmd, payload.context),
+          cwd: applyTemplate(execution.cwd, payload.context)
+        };
+        payload.process.push(exec);
+
+        return payload;
+      });
+    } else {
+      return Promise.resolve((payload) => {
+        // Report error as there is no exec
+      });
+    }
+  }
 
 }

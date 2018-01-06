@@ -1,7 +1,7 @@
 import { Observable, Observer } from 'rxjs';
 
 import Interpreter from './../parser/Interpreter';
-import Rule, {ProcessRule, ProcessResult} from '../parser/Rule';
+import Rule, {ProcessRule, ProcessResult, RuleTransformer} from '../parser/Rule';
 import Dialog from '../interface/Dialog';
 import Process from '../system/Process';
 import * as Maybe from '../func/Maybe';
@@ -23,7 +23,9 @@ class LearnRule extends ProcessRule {
 		)
 		this._interpreter = new Interpreter<DefinitionResult>();
 		this._interpreter.rules.push(
-			new HelpRule(_dialog, this._interpreter, {}),
+			new RuleTransformer(
+				new HelpRule(_dialog, this._interpreter),
+				() => ({})),
 			new ExecRule(this._dialog));
 	}
 
@@ -72,7 +74,7 @@ class LearnRule extends ProcessRule {
 						this._dialog.report('Cannot understand the action. Try again');
 					} // else null => non-defining operation
 				}
-				observer.complete();				
+				observer.complete();
 			} catch (err) {
 				observer.error(err)
 			}

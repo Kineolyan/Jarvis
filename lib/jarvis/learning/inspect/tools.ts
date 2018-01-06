@@ -12,9 +12,9 @@ import {ProcessMsg} from '../../system/Process';
 import ExecJob, {ExecDefinition} from '../../jobs/ExecJob';
 import Interpreter from '../../parser/Interpreter';
 import {JobsRule, JobLogRule} from '../../parser/jobRules';
-import {HelpRule} from '../../parser/defaultRules';
 
-type Context = {[key: string]: any};
+type Entry = {value: any};
+type Context = {[key: string]: Entry};
 type Transformer = (c: Context) => Context | void;
 
 const getFlags: (value: string | undefined) => string = (value) => {

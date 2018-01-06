@@ -6,7 +6,7 @@ interface RuleAction<Result> {
 }
 
 class Rule<Result> {
-  constructor(protected _expr: RegExp, private _action: RuleAction<Result>) {}
+  constructor(public _expr: RegExp, public _action: RuleAction<Result>) {}
 
   match(message: string) {
     return this._expr.test(message);
@@ -30,6 +30,21 @@ class Rule<Result> {
   }
 }
 
+class RuleTransformer<T, U> extends Rule<U> {
+  constructor(private rule: Rule<T>, private transformer: (r: T) => U) {
+    super(rule._expr, args => this.transform(args));
+  }
+
+  private transform(args) {
+    const result = this.rule._action(args);
+    return this.transformer(result);
+  }
+
+  describe() {
+    return this.rule.describe();
+  }
+}
+
 interface ProcessResult {
   asynchronous: boolean,
   progress?: Observable<ProcessMsg>,
@@ -43,6 +58,7 @@ const syncSuccess = {
 
 export default Rule;
 export {
+  RuleTransformer,
   RuleAction,
   ProcessResult,
   ProcessRule,

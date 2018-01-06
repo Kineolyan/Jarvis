@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import {Observable} from 'rxjs';
 import * as _ from 'lodash';
 
-import Rule, {ProcessRule, syncSuccess} from '../../parser/Rule';
+import Rule, {ProcessRule, syncSuccess, RuleTransformer} from '../../parser/Rule';
 import Store from '../../storage/Store';
 import Process from '../../system/Process';
 import Dialog from '../../interface/Dialog';
@@ -29,7 +29,9 @@ class InspectRule extends ProcessRule {
 			args => this.inspect());
 		this._interpreter = new Interpreter<InspectionResult>();
 		this._interpreter.rules.push(
-      new HelpRule(_dialog, this._interpreter, null),
+      new RuleTransformer(
+        new HelpRule(_dialog, this._interpreter),
+        () => null),
       new JobsRule(jobMgr, null),
       new JobLogRule(jobMgr, _dialog, null),
       new LookForRule(jobMgr, _dialog),

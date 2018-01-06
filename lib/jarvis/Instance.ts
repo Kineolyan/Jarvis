@@ -5,7 +5,7 @@ import {isOutput, isCompletion} from './system/Process';
 import Dialog from './interface/Dialog';
 import Logger from './interface/Logger';
 import Interpreter from './parser/Interpreter';
-import {ProcessResult, syncSuccess} from './parser/Rule';
+import {ProcessResult, syncSuccess, RuleTransformer} from './parser/Rule';
 import ExecutionManager from './learning/program/ExecutionManager';
 import RecoveryManager from './learning/recovery/RecoveryManager';
 import JobManager from './jobs/JobManager';
@@ -55,7 +55,9 @@ class Instance extends EventEmitter {
     this._interpreter = new Interpreter<ProcessResult>();
 
     this._interpreter.rules.push(
-      new HelpRule(this._dialog, this._interpreter, syncSuccess),
+      new RuleTransformer(
+        new HelpRule(this._dialog, this._interpreter),
+        () => syncSuccess),
       new QuestionRule(this._dialog),
 
       new RunRule(this._dialog, this._logger),
