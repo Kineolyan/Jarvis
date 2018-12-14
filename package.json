@@ -26,21 +26,21 @@
   },
   "homepage": "https://github.com/Kineolyan/Jarvis#readme",
   "dependencies": {
-    "chai": "^3.5.0",
+    "chai": "4.2.0",
     "chokidar": "^1.6.1",
     "del-cli": "^0.2.0",
     "lodash": "^4.11.2",
-    "mocha": "^3.2.0",
+    "mocha": "5.2.0",
     "rxjs": "^5.2.0",
     "typescript": "^2.2.1"
   },
   "devDependencies": {
-    "@types/chai": "^3.4.34",
+    "@types/chai": "4.1.7",
     "@types/chokidar": "^1.4.31",
     "@types/jest": "^18.1.1",
     "@types/lodash": "^4.14.54",
     "@types/node": "^7.0.5",
-    "jest": "^19.0.2"
+    "jest": "23.6.0"
   },
   "jest": {
     "moduleFileExtensions": [
