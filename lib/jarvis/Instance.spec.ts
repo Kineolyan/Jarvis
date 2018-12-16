@@ -60,7 +60,7 @@ describe('Jarvis::Instance', () => {
 
       beforeEach(() => {
         jobMgr = (<any> instance)._jobMgr;
-        observer = Observable.of(42);
+        observer = of(42);
         (<any> instance)._interpreter.rules.push(new Rule(
           /^sync/, () => ({
             asynchronous: false,

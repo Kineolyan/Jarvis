@@ -1,5 +1,6 @@
 import {EventEmitter} from 'events';
-import {Observable, Subject} from 'rxjs';
+import {Observable, Subject, from, empty} from 'rxjs';
+import {flatMap} from 'rxjs/operators';
 
 import {isOutput, isCompletion} from './system/Process';
 import Dialog from './interface/Dialog';
@@ -9,7 +10,6 @@ import {ProcessResult, syncSuccess} from './parser/Rule';
 import ExecutionManager from './learning/program/ExecutionManager';
 import RecoveryManager from './learning/recovery/RecoveryManager';
 import JobManager from './jobs/JobManager';
-import ExecJob from './jobs/ExecJob';
 import Store, {buildDefaultStore, setStore} from './storage/Store'; // FIXME stop using singleton
 import { IO } from './interface/IOs';
 import * as Maybe from './func/Maybe';
@@ -167,8 +167,8 @@ class Instance extends EventEmitter {
   }
 
   queryAction(): Observable<{}> {
-    return Observable.fromPromise(this._dialog.ask(this.buildQuestion()))
-      .flatMap(answer => {
+    return from(this._dialog.ask(this.buildQuestion()))
+      .pipe(flatMap(answer => {
         const r = this._interpreter.interpret(answer);
         if (Maybe.isDefined(r)) {
           const result = Maybe.get(r);
@@ -180,12 +180,12 @@ class Instance extends EventEmitter {
               this._jobMgr.registerJob(result.progress, result.description);
           }
 
-          return Observable.empty();
+          return empty();
         } else {
           this._dialog.report('Unknown action');
-          return Observable.empty();
+          return empty();
         }
-      });
+      }));
   }
 
   quit() {

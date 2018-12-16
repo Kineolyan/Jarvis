@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as readline from 'readline';
 
 import * as Maybe from '../../func/Maybe';
 
@@ -45,9 +44,9 @@ const mkdir: (string) => Promise<any> = (dirPath) => rawMkdir(dirPath)
 			return Promise.reject(err);
 		}
 	});
-const readdir: (string) => Promise<string[]> = toPromise(fs.readdir);
+const readdir: (string) => Promise<any> = toPromise(fs.readdir);
 const lstat: (string) => Promise<any> = toPromise(fs.lstat);
-const readlink: (string) => Promise<string> = toPromise(fs.readlink);
+const readlink: (string) => Promise<any> = toPromise(fs.readlink);
 
 function ensureFolder(folder: string): Promise<any> {
 	return access(folder, fs.constants.F_OK)
@@ -132,7 +131,7 @@ function removeEmptySeasons(): Promise<any> {
 	return readdir(plexPath())
 		.then(series => Promise.all(
 			series.map(serie => readdir(plexPath(serie))
-				.then(seasons => seasons.map(season => path.join(plexPath(serie, season)))))
+				.then(seasons => (seasons as string[]).map(season => plexPath(serie, season))))
 		))
 		.then(results => {
 			const allSeasons = results.reduce((list, items) => list.concat(items), []);

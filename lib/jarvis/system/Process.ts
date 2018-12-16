@@ -1,6 +1,6 @@
 import {spawn, ChildProcess} from 'child_process';
 import * as fs from 'fs';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 
 interface ProcessOptions {
 	cwd?: string
@@ -95,8 +95,8 @@ function fromPromise(promise: Promise<any>): Process {
 	});
 }
 
-function emptyProcess(code: number) {
-	return Observable.of({code});
+function emptyProcess(code: number): Process {
+	return of({code});
 }
 
 function success(): Process {

@@ -1,4 +1,5 @@
-import {Observable} from 'rxjs';
+import {Observable, from, of} from 'rxjs';
+import {flatMap} from 'rxjs/operators';
 import * as _ from 'lodash';
 
 import {ProcessRule} from '../parser/Rule';
@@ -32,8 +33,8 @@ class DoLearningRule extends ProcessRule {
 	startProgram(args) {
 		const programName = args[1] || args[2] || args[3];
 		this._dialog.say(`You reached the task to execute ${programName}`);
-		const progress = Observable.fromPromise(this.findProgram(programName))
-			.flatMap(program => this.executeProgram(programName, program));
+		const progress = from(this.findProgram(programName))
+			.pipe(flatMap(program => this.executeProgram(programName, program)));
 
 		return {
 			asynchronous: true,
@@ -62,9 +63,7 @@ class DoLearningRule extends ProcessRule {
 			return executor.execute();
 		} else {
 			this._dialog.report(`Program ${name} does not exist`);
-			return Observable.of({
-				code: 1
-			});
+			return of({code: 1});
 		}
 	}
 

@@ -1,4 +1,5 @@
 import { Observable } from 'rxjs';
+import {delay} from 'rxjs/operators';
 
 import Dialog from '../interface/Dialog';
 import * as time from '../interface/time';
@@ -45,7 +46,7 @@ export class JobManager {
       startTime: Date.now(),
       endTime: undefined,
       completion: new Promise<JobRecord>(resolve => {
-        job.delay(10) // Delay to let time for the record to be registered
+        job.pipe(delay(10)) // Delay to let time for the record to be registered
           .subscribe({
             next(msg) {
               if (isOutput(msg)) {

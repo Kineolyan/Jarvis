@@ -1,4 +1,3 @@
-import { RuleAction } from './../parser/Rule';
 import {StringIO} from './IOs';
 
 describe('AIO', function() {
@@ -10,7 +9,7 @@ describe('AIO', function() {
 
 	describe('#question', function() {
 		it('asks a question and returns the answer as promise', function() {
-			const expectations = this.io.question('Who are you ?')
+			const expectations = io.question('Who are you ?')
 				.then(answer => expect(answer).toEqual('Simply the best'));
 			io.input('Simply the best');
 
@@ -19,12 +18,12 @@ describe('AIO', function() {
 
 		it.skip('supports many questions', function() {
 			io.input('Here', 'Trick', 'hello', 'wordl', 'are', 'you', 'listening');
-			const expectations = this.io.question('When ?')
+			const expectations = io.question('When ?')
 				.then((...args) => {
 					console.log(args);
 					const [a1] = args;
 					expect(a1).toEqual('Here');
-					const exs = this.io.question('What ?')
+					const exs = io.question('What ?')
 				console.log('2');
 
 					return exs;
@@ -37,7 +36,7 @@ describe('AIO', function() {
 			return expectations;
 		});
 
-		it.skip('supports multiple questions simultaneously', function () {
+		it.skip('supports multiple questions simultaneously', function() {
 			io.input('In the kitchen', 'Brian');
 
 			return Promise.all([

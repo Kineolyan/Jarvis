@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {Observable, Scheduler} from 'rxjs';
+import {Scheduler, of} from 'rxjs';
 import * as _ from 'lodash';
 
 import {MockIO} from '../../interface/IOs';
@@ -49,7 +49,7 @@ describe('Jarvis::learning::inspect::InspectRule', () => {
 
   it('runs a full inspection', async () => {
     const jobId = jobMgr.registerJob(
-      Observable.of(
+      of(
         {data: '1.1 first line\n1.2 second line', source: 'out'},
         {data: '2.1 third line', source: 'out'},
         {data: '3.1 last line', source: 'out'},

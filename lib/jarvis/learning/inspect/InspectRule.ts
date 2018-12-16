@@ -1,15 +1,11 @@
-import { expect } from 'chai';
-import {Observable} from 'rxjs';
+import {Observable, from} from 'rxjs';
 import * as _ from 'lodash';
 
-import Rule, {ProcessRule, syncSuccess} from '../../parser/Rule';
-import Store from '../../storage/Store';
+import Rule, {ProcessRule} from '../../parser/Rule';
 import Process from '../../system/Process';
 import Dialog from '../../interface/Dialog';
 import * as Maybe from '../../func/Maybe';
-import JobManager, {JobRecord} from '.././../jobs/JobManager';
-import {ProcessMsg} from '../../system/Process';
-import ExecJob, {ExecDefinition} from '../../jobs/ExecJob';
+import JobManager from '.././../jobs/JobManager';
 import Interpreter from '../../parser/Interpreter';
 import {JobsRule, JobLogRule} from '../../parser/jobRules';
 import {HelpRule} from '../../parser/defaultRules';
@@ -51,7 +47,7 @@ class InspectRule extends ProcessRule {
 
     return {
       asynchronous: false,
-      progress: Observable.fromPromise(progress)
+      progress: from(progress)
     };
   }
 

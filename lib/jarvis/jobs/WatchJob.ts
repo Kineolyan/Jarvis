@@ -1,11 +1,10 @@
-import { Observable, Subject } from 'rxjs';
-import { EventEmitter } from 'events';
+import { Observable, Subject, from} from 'rxjs';
+import {flatMap} from 'rxjs/operators';
 import * as chokidar from 'chokidar';
 import * as _ from 'lodash';
 
 import ExecJob, {ExecDefinition} from './ExecJob';
 import Job from './Job';
-import Logger from '../interface/Logger';
 import Dialog from '../interface/Dialog';
 import {ProcessMsg, isOutput, isCompletion} from '../system/Process';
 
@@ -106,8 +105,8 @@ class WatchJob implements Job {
 			throw new Error('Already started');
 		}
 
-		return Observable.fromPromise(this.createAction())
-			.flatMap(job => {
+		return from(this.createAction())
+			.pipe(flatMap(job => {
 				if (this._runner === undefined) {
 					const runner = new WatchExecutor(job, this._dialog);
 					this._runner = runner;
@@ -128,7 +127,7 @@ class WatchJob implements Job {
 				} else {
 					return this._runner.subject;
 				}
-			});
+			}));
 	}
 
 	stop() {

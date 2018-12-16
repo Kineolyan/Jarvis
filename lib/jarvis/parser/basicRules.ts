@@ -1,4 +1,5 @@
-import { Observable } from 'rxjs';
+import { Observable, from} from 'rxjs';
+import {flatMap} from 'rxjs/operators';
 
 import {RuleAction, ProcessRule, ProcessResult} from './Rule';
 import Dialog from '../interface/Dialog';
@@ -18,8 +19,8 @@ class RunRule extends ProcessRule {
 
   runJob(args: any): ProcessResult {
     const name = ProcessRule.getQuotedArg(args[1]);
-    const progress = Observable.fromPromise(ExecJob.create(name))
-      .flatMap(job => {
+    const progress = from(ExecJob.create(name))
+      .pipe(flatMap(job => {
         if (job !== undefined) {
           this._dialog.say(`Running '${name}'`);
           return job.execute();
@@ -27,7 +28,7 @@ class RunRule extends ProcessRule {
           this._dialog.report(`Task ${name} does not exist`);
           return Process.error();
         }
-      });
+      }));
 
     return {
       asynchronous: true,
@@ -47,8 +48,8 @@ class WatchRule extends ProcessRule {
 
   runJob(args): ProcessResult {
     const name = ProcessRule.getQuotedArg(args[1]);
-    const progress = Observable.fromPromise(this.resolveDefinition(name))
-      .flatMap(watchDefinition => {
+    const progress = from(this.resolveDefinition(name))
+      .pipe(flatMap(watchDefinition => {
         if (watchDefinition !== null) {
           this._dialog.say(`Watching '${name}'`);
           const watch = new WatchJob(watchDefinition, {}, this._dialog);
@@ -57,7 +58,7 @@ class WatchRule extends ProcessRule {
           this._dialog.report(`Watch task ${name} does not exist`);
           return Process.error();
         }
-      });
+      }));
 
     return {
       asynchronous: true,
