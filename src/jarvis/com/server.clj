@@ -1,12 +1,32 @@
 (ns jarvis.com.server
   (:require [net.tcp.server :as s]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import [java.io FileNotFoundException]))
+
+(def port-file "/tmp/jarvis.port")
+
+(defn read-port
+  "Reads the port of the started Jarvis application."
+  []
+  (try 
+    (Integer/parseInt (slurp port-file))
+    (catch FileNotFoundException e
+      (throw (IllegalStateException. "Server not started" e)))))
 
 (defn handler [reader writer]
-  (with-open [rdr (io/reader reader)]
-    (doseq [line (line-seq rdr)]
-      (println (str "> " line))))
-  (spit writer "Hello World"))
+  (println "new connection :)")
+  (loop [ready (.ready reader)]
+    (when ready
+      (println (str "> " (.readLine reader)))
+      (recur (.ready reader))))
+  (.append writer "Hello World")
+  (.flush writer)
+  (println "< flushed")
+  (.write writer "Bye")
+  (println "> Blocking until read:")
+  (println "> [" (.readLine reader) "]")
+  (Thread/sleep 5000)
+  (println "bye connection :)"))
 
 (defn create
   "Creates a new server."
@@ -16,21 +36,30 @@
    :handler (s/wrap-io handler)))
 
 (defn start
-  "Starts a given server"
+  "Starts the given server."
   [server]
+  (when (.exists (io/file port-file))
+    (throw (IllegalStateException (str "Server already started on port " (read-port)))))
   (s/start server)
   (let [port (.getLocalPort @(:socket server))]
-    (spit "/tmp/jarvis.port" port)))
+    (spit port-file port)
+    (let [p (read-port)]
+      (when-not (= p port)
+        (throw (IllegalStateException. "Stored port not matching current port. Concurrent start of app?"))))))
 
 (defn stop
   "Stops a running server"
   [server]
   (when (s/running? server)
-    (s/stop server)))
+    (s/stop server)
+    (io/delete-file port-file)))
 
 (comment
   (def srv (create))
   (start srv)
-  (stop srv)
   (s/running? srv)
+  (read-port)
+  
+  (stop srv)
+  
   (.getLocalPort @(:socket srv)))
