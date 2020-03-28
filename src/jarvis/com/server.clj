@@ -15,16 +15,17 @@
 
 (defn handler [reader writer]
   (println "new connection :)")
-  (loop [ready (.ready reader)]
-    (when ready
+  ; wait for the first input
+  (loop []
+    (when-not (.ready reader) 
+      (Thread/sleep 10)
+      (recur)))
+  (loop []
+    (when (.ready reader)
       (println (str "> " (.readLine reader)))
-      (recur (.ready reader))))
-  (.append writer "Hello World")
+      (recur)))
+  (.append writer "Hello World\n")
   (.flush writer)
-  (println "< flushed")
-  (.write writer "Bye")
-  (println "> Blocking until read:")
-  (println "> [" (.readLine reader) "]")
   (Thread/sleep 5000)
   (println "bye connection :)"))
 
@@ -39,13 +40,14 @@
   "Starts the given server."
   [server]
   (when (.exists (io/file port-file))
-    (throw (IllegalStateException (str "Server already started on port " (read-port)))))
+    (throw (IllegalStateException. (str "Server already started on port " (read-port)))))
   (s/start server)
   (let [port (.getLocalPort @(:socket server))]
     (spit port-file port)
     (let [p (read-port)]
       (when-not (= p port)
-        (throw (IllegalStateException. "Stored port not matching current port. Concurrent start of app?"))))))
+        (throw (IllegalStateException. 
+                "Stored port not matching current port. Concurrent start of app?"))))))
 
 (defn stop
   "Stops a running server"
