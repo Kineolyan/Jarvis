@@ -2,8 +2,9 @@
   (:require [net.tcp.server :as s]
             [clojure.java.io :as io])
   (:import [java.io FileNotFoundException]))
+(set! *warn-on-reflection* 1)
 
-(def port-file "/tmp/jarvis.port")
+(def port-file "/tmp/jarvis.sock")
 
 (defn read-port
   "Reads the port of the started Jarvis application."

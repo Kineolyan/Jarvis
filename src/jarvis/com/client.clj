@@ -2,6 +2,7 @@
   (:require [net.tcp.server :as s]
             [jarvis.com.server :refer [read-port]])
   (:import [java.net Socket]))
+(set! *warn-on-reflection* 1)
 
 (defn print-handler
   [content reader writer]
@@ -29,27 +30,6 @@
 (comment
   (def content "test")
   (def port (read-port))
-
-  ;; (with-open [s (Socket. "localhost" (read-port))]
-  ;;   (.write (.getOutputStream s) (.getBytes "multi\nlines\n"))
-  ;;   (loop []
-  ;;     (when-not (.ready )))
-  ;;   (println "< reading")
-  ;;   (let [in (io/reader (.getInputStream s))]
-  ;;     (loop []
-  ;;       (println (str "< " (.readLine in)))
-  ;;       (Thread/sleep 50)))
-  ;;   ;;   (loop [ready (.ready in) c 0]
-  ;;   ;;     (when (< c 10)
-  ;;   ;;       (if ready
-  ;;   ;;         (println (str "< " (.readLine in)))
-  ;;   ;;         (do 
-  ;;   ;;           (println "< nothing...")
-  ;;   ;;           (Thread/sleep 10)
-  ;;   ;;           (recur (.ready in) (inc c)))))))
-  ;;   ;; (.write (.getOutputStream s) (.getBytes "adios\n"))
-  ;;   (println "-- end --"))
-  
   (send-msg "this is my content")
   
   )
