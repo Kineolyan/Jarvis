@@ -1,8 +1,7 @@
 (ns jarvis.com.server
   (:require [net.tcp.server :as s]
             [clojure.java.io :as io])
-  (:import [java.io FileNotFoundException]))
-(set! *warn-on-reflection* 1)
+  (:import [java.io FileNotFoundException BufferedReader BufferedWriter]))
 
 (def port-file "/tmp/jarvis.sock")
 
@@ -14,7 +13,7 @@
     (catch FileNotFoundException e
       (throw (IllegalStateException. "Server not started" e)))))
 
-(defn handler [reader writer]
+(defn handler [^BufferedReader reader ^BufferedWriter writer]
   (println "new connection :)")
   ; wait for the first input
   (loop []
@@ -43,7 +42,8 @@
   (when (.exists (io/file port-file))
     (throw (IllegalStateException. (str "Server already started on port " (read-port)))))
   (s/start server)
-  (let [port (.getLocalPort @(:socket server))]
+  (let [^java.net.Socket socket @(:socket server)
+        port (.getLocalPort socket)]
     (spit port-file port)
     (let [p (read-port)]
       (when-not (= p port)

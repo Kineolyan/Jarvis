@@ -1,5 +1,6 @@
 (ns jarvis.config
-  (:require [clojure.edn :as edn])
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io])
   (:import [java.nio.file Path]))
 (set! *warn-on-reflection* 1)
 
@@ -21,12 +22,21 @@
 (defn read-config
   "Reads the config for a given key k."
   [k]
-  (-> (get-config-file k) slurp edn/read-string))
+  (let [filename  (get-config-file k)] 
+    (if (.exists (io/file filename))
+      (-> filename slurp edn/read-string)
+      nil)))
 
 (defn write-config
   "Writes the passed configuration for the key k."
   [k content]
   (-> (get-config-file k) (spit (pr-str content))))
+
+(defn update-config
+  [k f]
+  (->> (read-config k)
+       (f)
+       (write-config k)))
 
 (comment
   (def file "/tmp/jarvis-git.edn")

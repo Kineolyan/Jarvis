@@ -7,4 +7,13 @@
                  [tcp-server "0.1.0"]]
   :main ^:skip-aot jarvis.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:dev {:global-vars {*warn-on-reflection* true
+                                 *assert* true}}
+             :uberjar {:aot :all
+                       :plugins [[io.taylorwood/lein-native-image "0.3.1"]]
+                       :native-image {;:graal-bin (str :env/JAVA_HOME "/bin")
+                                      :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
+                                      :opts ["--verbose"
+                                             "--report-unsupported-elements-at-runtime"
+                                             "--initialize-at-build-time"]
+                                      :name "jarvis-client"}}})

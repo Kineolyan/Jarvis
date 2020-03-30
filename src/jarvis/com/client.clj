@@ -1,11 +1,11 @@
 (ns jarvis.com.client
   (:require [net.tcp.server :as s]
             [jarvis.com.server :refer [read-port]])
-  (:import [java.net Socket]))
-(set! *warn-on-reflection* 1)
+  (:import [java.net Socket]
+           [java.io BufferedReader BufferedWriter]))
 
 (defn print-handler
-  [content reader writer]
+  [^String content ^BufferedReader reader ^BufferedWriter writer]
   (.append writer "Hello my friend\nThis is a nice day\n")
   (.append writer content)
   (.append writer "\n")
@@ -23,9 +23,10 @@
   ([content]
    (send-msg (read-port) content))
   ([port content]
-   (with-open [socket (Socket. "localhost" port)]
-     (let [handler (s/wrap-io (partial print-handler content))]
-       (handler socket)))))
+   (let [^String host "localhost"]
+     (with-open [socket (Socket. host port)]
+       (let [handler (s/wrap-io (partial print-handler content))]
+         (handler socket))))))
 
 (comment
   (def content "test")
