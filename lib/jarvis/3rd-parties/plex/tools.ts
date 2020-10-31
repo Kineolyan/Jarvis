@@ -76,7 +76,10 @@ function toSerieNb(value: number): string {
 
 function guessEpisode(episode: string): Maybe.Option<SerieMetadata>{
 	const episodeName = path.basename(episode);
-	const exprs = [/s(\d{2})e(\d{2})/i];
+	const exprs = [
+		/[s\.\-_](\d{1,2})e(\d{1,2})/i,
+		/[\.\-_](\d{1,2})(\d{2})/
+	];
 	for (const expr of exprs) {
 		const matchs = expr.exec(episodeName);
 		if (matchs) {

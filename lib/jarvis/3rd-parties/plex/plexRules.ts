@@ -60,8 +60,8 @@ class Plexify extends ProcessRule {
       (chain, episodePath) => chain
         .then(map => {
           const guess = plex.guessEpisode(episodePath);
-          const guessStr = Maybe.doOrElse(guess, guess => ` -> ${guess.season}x${guess.episode}`, '');
-          return this._dialog.ask(`[${episodePath}]${guessStr}\nepisode number [Y|ssee]: `)
+          const guessStr = Maybe.doOrElse(guess, guess => `${guess.season}x${guess.episode}`, '<unknown>');
+          return this._dialog.ask(`[${episodePath}] -> ${guessStr}'\nepisode number [Y|ssee]: `)
             .then(value => {
               let metadata;
               if (value) {
@@ -70,8 +70,10 @@ class Plexify extends ProcessRule {
                   season: Math.floor(number / 100),
                   episode: number % 100
                 };
+              } else if (Maybe.isDefined(guess)) {
+                metadata = Maybe.get(guess);
               } else {
-                metadata = guess;
+                throw new Error(`Did not defined an episode number to ${episodePath}`);
               }
 
               map[episodePath] = metadata;

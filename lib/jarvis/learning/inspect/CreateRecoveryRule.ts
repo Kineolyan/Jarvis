@@ -1,3 +1,4 @@
+import { JobManager } from './../../jobs/JobManager';
 import { Observable } from 'rxjs';
 
 import * as Maybe from '../../func/Maybe';
@@ -28,11 +29,7 @@ type Operation = any;
 type Payload = {context: Context, process: Operation[]};
 type Transformer = (p: Payload) => (void | Promise<Payload>);
 
-const applyTemplate = (value: string | undefined, context: Context = {}) => {
-  if (value === undefined) {
-    return value;
-  }
-
+const applyTemplate = (value: string, context: Context = {}) => {
   // look for every template
   const keys = new Set();
   const expr = /@([\w\-_]+)/g;
@@ -56,20 +53,20 @@ class CreateRecoveryRule extends Rule<any> {
 
 	private interpreter: Interpreter<any>;
 
-	constructor(dialog: Dialog, context: any = {}) {
+	constructor(dialog: Dialog, jobMgr: JobManager, context: any = {}) {
 		super(
 			/create (manual )?recovery(?: process)?/,
 			args => this.createRecovery(dialog, context, args));
 
 		this.interpreter = new Interpreter<Transformer>();
 		this.interpreter.rules.push(
-			newn RuleTransformer(
+			new RuleTransformer(
         new HelpRule(dialog, this.interpreter),
         (payload) => {}),
       new RuleTransformer(
         new ExecRule(dialog),
         this.addExecution),
-			new CaptureAsRule(null, dialog),
+			new CaptureAsRule(jobMgr, dialog),
 			new PrintContextRule(dialog));
 	}
 
@@ -103,7 +100,7 @@ class CreateRecoveryRule extends Rule<any> {
           dialog.report('Cannot understand the action. Try again');
         }
 
-        return this.loopOnDefinition(dialog, context);
+        return this.loopOnDefinition(dialog, context, null);
       });
   }
 
@@ -113,7 +110,7 @@ class CreateRecoveryRule extends Rule<any> {
         const {context, process} = payload;
         const exec: ExecDefinition = {
           cmd: applyTemplate(execution.cmd, payload.context),
-          cwd: applyTemplate(execution.cwd, payload.context)
+          cwd: execution.cwd && applyTemplate(execution.cwd, payload.context)
         };
         payload.process.push(exec);
 
